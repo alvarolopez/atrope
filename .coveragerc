@@ -1,0 +1,7 @@
+[run]
+branch = True
+source = atrope
+omit = atrope/tests/*,atrope/openstack/*
+
+[report]
+ignore-errors = True
