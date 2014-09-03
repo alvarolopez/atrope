@@ -1,0 +1,9 @@
+ttycorelinux egi:
+    url: https://vmcaster.appdb.egi.eu/store/vappliance/tinycorelinux/image.list
+    enabled: true
+
+foo:
+    enabled: false
+
+bar:
+    enabled: true
