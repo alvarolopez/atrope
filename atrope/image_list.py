@@ -14,6 +14,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import json
 import logging
 import os.path
 
@@ -21,7 +22,9 @@ from oslo.config import cfg
 import requests
 import yaml
 
+from atrope import exception
 from atrope import paths
+from atrope import smime
 from atrope import utils
 
 opts = [
@@ -31,10 +34,6 @@ opts = [
     cfg.StrOpt('lists_path',
                default=paths.state_path_def('lists'),
                help='Where instances are stored on disk'),
-    cfg.BoolOpt('cleanup_disabled_lists',
-               default=True,
-               help=('Wheter to remove from the state dir a list that '
-                     'has been disabled.')),
 ]
 
 CONF = cfg.CONF
@@ -47,7 +46,13 @@ logger = logging.getLogger(__name__)
 
 class ImageLists(object):
     def __init__(self):
+        self.verifier = smime.SMIMEVerifier()
+
         utils.makedirs(CONF.lists_path)
+
+        self.image_lists = {}
+        self.valid_lists = {}
+
         self._load_data()
         self._get_lists()
 
@@ -59,29 +64,84 @@ class ImageLists(object):
 
     def _get_lists(self):
         """Download and store the configured lists."""
+
+        self.valid_lists = {}
+
         for name, list_meta in self.image_lists.iteritems():
             url = list_meta.get("url", None)
             enabled = list_meta.get("enabled", True)
+            endorser = list_meta.get("endorser", {})
 
             if not enabled:
                 continue
 
             if url is None:
-                logging.error("Skipping image list '%s', no url provided" % name)
+                logging.error("Skipping image list '%s', no url provided" %
+                              name)
+                continue
+
+            if not all(i in endorser for i in ("dn", "ca")):
+                logging.warning("List '%s' has no valid endorser, it won't "
+                                "be downloaded" % name)
                 continue
 
             logging.debug("Getting image list '%s' from '%s'" % (name, url))
 
+            # NOTE(aloga): asume that file is small and that we
+            # do not really need to stream it
+            l = requests.get(url)
+            try:
+                signers, raw_list = self.verifier.verify(l.content)
+            except exception.SMIMEValidationError as e:
+                logging.error("Cannot verify list '%s' downloaded from '%s'" %
+                              (name, url))
+                logging.error(e)
+                continue
+
+            try:
+                contents = json.loads(raw_list)
+            except ValueError:
+                logging.error("Cannot load list '%s', invalid JSON" % name)
+                continue
+
+            # FIXME(aloga): make checks about the list fields that are
+            # needed. This code here is horrible
+            list_endorser = contents.get("hv:imagelist", {})
+            list_endorser = list_endorser.get("hv:endorser", {})
+            list_endorser = list_endorser.get("hv:x509", {})
+            if not all(i in list_endorser for i in ("hv:ca", "hv:dn")):
+                logging.error("List '%s' does not contain a valid endorser" %
+                              name)
+                continue
+
+            if endorser["dn"] != list_endorser["hv:dn"]:
+                logging.error("List '%s' endorser is not trusted, DN "
+                              "mismatch %s != %s" % (name, endorser["dn"],
+                                                     list_endorser["hv:dn"]))
+                continue
+
+            if endorser["ca"] != list_endorser["hv:ca"]:
+                logging.error("List '%s' endorser CA is invalid "
+                              "%s != %s" % (name, endorser["ca"],
+                                            list_endorser["hv:ca"]))
+                continue
+
             basedir = os.path.join(CONF.lists_path, "%s.list" % name)
             utils.makedirs(basedir)
-
-            l = requests.get(url)
             with open(os.path.join(basedir, name), 'w') as f:
-                # NOTE(aloga): asume that file is small and that we
-                # do not really need to stream it
                 f.write(l.content)
 
-    def _verify_list(self, *args, **kwargs):
+            with open(os.path.join(basedir, "%s.raw" % name), 'w') as f:
+                f.write(raw_list)
+
+            self.valid_lists[name] = {
+                "signers": signers,
+                "contents": contents,
+            }
+
+        logging.debug("Loaded the following lists: %s" % self.valid_lists)
+
+    def _verify_list(self, msg):
         return True
 
     def _check_stored_lists(self):

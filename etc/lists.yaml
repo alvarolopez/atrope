@@ -1,6 +1,9 @@
 ttycorelinux egi:
     url: https://vmcaster.appdb.egi.eu/store/vappliance/tinycorelinux/image.list
     enabled: true
+    endorser:
+        dn: '/DC=EU/DC=EGI/C=NL/O=Hosts/O=EGI.eu/CN=appdb.egi.eu'
+        ca: "/DC=ORG/DC=SEE-GRID/CN=SEE-GRID CA 2013"
 
 foo:
     enabled: false
