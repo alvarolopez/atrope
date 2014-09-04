@@ -149,6 +149,9 @@ class ImageLists(object):
         # 1. load directory contents
         # 2. traverse directory
         # 3. check against the stored lists
-        #       - if list is disabled, add to disabled lists
-        #       - if list is enabled and endorsed is trusted, add to enabled lists
-        #       - if list is enabeld and endorser is not trusted, add to disabled lists
+        #       - if list is disabled, add to disabled
+        #         lists
+        #       - if list is enabled and endorsed is trusted,
+        #         add to enabled lists
+        #       - if list is enabeld and endorser is not trusted,
+        #         add to disabled lists
