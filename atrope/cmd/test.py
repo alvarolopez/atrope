@@ -24,7 +24,7 @@ CONF = cfg.CONF
 
 def main():
     atrope.config.parse_args(sys.argv)
-    i = atrope.image_list.ImageLists()  # noqa
+    atrope.image_list.ImageListManager()
 
 
 if __name__ == "__main__":

@@ -43,7 +43,7 @@ logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 
-class List(object):
+class ImageList(object):
     """An image list."""
 
     def __init__(self, name, url=None, enabled=True, endorser={}, token=None):
@@ -140,11 +140,9 @@ class List(object):
         return True
 
 
-class ImageLists(object):
+class ImageListManager(object):
     def __init__(self):
-        self.verifier = smime.SMIMEVerifier()
-
-        utils.makedirs(CONF.lists_path)
+#        utils.makedirs(CONF.lists_path)
 
         self.image_lists = {}
         self.enabled_lists = []
@@ -178,7 +176,7 @@ class ImageLists(object):
 
         for name, list_meta in self.image_lists.iteritems():
             try:
-                l = List(name,
+                l = ImageList(name,
                          url=list_meta.get("url", None),
                          enabled=list_meta.get("enabled", True),
                          endorser=list_meta.get("endorser", {}),
