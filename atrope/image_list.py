@@ -86,8 +86,10 @@ class List(object):
                  the image.
         """
         if self.token:
-            pass  # Do oauth auth
-        response = requests.get(self.url)
+            auth = (self.token, 'x-oauth-basic')
+        else:
+            auth = None
+        response = requests.get(self.url, auth=auth)
         if response.status_code != 200:
             raise exception.ImageListDownloadFailed(code=response.status_code,
                                                     reason=response.reason)
