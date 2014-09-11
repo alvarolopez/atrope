@@ -16,12 +16,14 @@
 
 import json
 import logging
+import os.path
 
 from oslo.config import cfg
 import requests
 import yaml
 
 from atrope import exception
+from atrope import image
 from atrope import paths
 from atrope import smime
 from atrope import utils
@@ -62,11 +64,23 @@ class ImageList(object):
         self.contents = None
         self.d_contents = {}
 
+        self.images = []
+
         if self.enabled and self.url:
             self.content = self._get()
             self.verified, self.signers, raw_list = self._verify()
-            # FIXME(aloga): exception here
-            self.d_contents = json.loads(raw_list)
+            # FIXME(aloga): We should check that the JSON is valid, and that
+            # load the data into the object.
+            try:
+                self.d_contents = json.loads(raw_list)
+            except ValueError:
+                raise exception.InvalidImageList(reason="Invalid JSON.")
+
+            img_list = self.d_contents.get("hv:imagelist", {})
+            for img in img_list.get("hv:images"):
+                print img
+                self.images.append(image.VMCasterImage(img))
+
             self.trusted = self._check_endorser()
 
     def __repr__(self):
@@ -118,6 +132,8 @@ class ImageList(object):
 
         :returns: True of False if endorsers are trusted or not.
         """
+
+        # FIXME(aloga): This should be in its own class
         list_endorser = self.d_contents.get("hv:imagelist", {})
         list_endorser = list_endorser.get("hv:endorser", {})
         list_endorser = list_endorser.get("hv:x509", {})
@@ -142,12 +158,12 @@ class ImageList(object):
 
 class ImageListManager(object):
     def __init__(self):
-#        utils.makedirs(CONF.lists_path)
+        utils.makedirs(CONF.lists_path)
 
         self.image_lists = {}
-        self.enabled_lists = []
-        self.disabled_lists = []
-        self.untrusted_lists = []
+        self.enabled_lists = None
+        self.disabled_lists = None
+        self.untrusted_lists = None
 
         self._load_data()
         self.get_lists()
@@ -198,3 +214,31 @@ class ImageListManager(object):
         logging.debug("Enabled lists: %s" % self.enabled_lists)
         logging.debug("Disabled lists: %s" % self.disabled_lists)
         logging.debug("Untrusted lists: %s" % self.untrusted_lists)
+
+    def download_images(self):
+        """Download the images to disk."""
+        if self.enabled_lists is None:
+            self.get_lists()
+
+        for l in self.enabled_lists:
+            basedir = os.path.join(CONF.lists_path, l.name, 'images')
+            utils.makedirs(basedir)
+
+            for img in l.images:
+#                img = img.get("hv:image", {})
+                self.download_image(img, basedir)
+
+    def download_image(self, image, dest):
+        dest = os.path.join(dest, image.identifier)
+
+        with open(dest, 'wb') as f:
+            response = requests.get(image.uri, stream=True)
+
+            if not response.ok:
+                # FIXME(aloga)
+                pass
+
+            for block in response.iter_content(1024):
+                if block:
+                    f.write(block)
+                    f.flush()

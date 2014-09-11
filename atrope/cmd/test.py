@@ -24,7 +24,8 @@ CONF = cfg.CONF
 
 def main():
     atrope.config.parse_args(sys.argv)
-    atrope.image_list.ImageListManager()
+    manager = atrope.image_list.ImageListManager()
+    manager.download_images()
 
 
 if __name__ == "__main__":
