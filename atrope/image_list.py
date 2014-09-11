@@ -16,7 +16,6 @@
 
 import json
 import logging
-import os.path
 
 from oslo.config import cfg
 import requests
@@ -44,6 +43,101 @@ logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 
+class List(object):
+    """An image list."""
+
+    def __init__(self, name, url=None, enabled=True, endorser={}, token=None):
+        self.name = name
+
+        self.url = url
+        self.token = token
+
+        self.enabled = enabled
+
+        self.endorser = endorser
+        self.signers = None
+        self.verified = False
+        self.trusted = False
+
+        self.contents = None
+        self.d_contents = {}
+
+        if self.enabled and self.url:
+            self.content = self._get()
+            self.verified, self.signers, raw_list = self._verify()
+            # FIXME(aloga): exception here
+            self.d_contents = json.loads(raw_list)
+            self.trusted = self._check_endorser()
+
+    def __repr__(self):
+        return "<%s: %s>" % (
+            self.__class__.__name__,
+            self.name
+        )
+
+    def _get(self):
+        """
+        Get the image list from the server.
+
+        If it is needed, use a token to authenticate against the server.
+
+        :returns: the image list.
+        :raises: exception.ImageListDownloadFailed if it is not possible to get
+                 the image.
+        """
+        if self.token:
+            pass  # Do oauth auth
+        response = requests.get(self.url)
+        if response.status_code != 200:
+            raise exception.ImageListDownloadFailed(code=response.status_code,
+                                                    reason=response.reason)
+        else:
+            return response.content
+
+    def _verify(self):
+        """
+        Verify the image list SMIME signature.
+
+        :returns: tuple (signers, raw_list) with the signers and the raw list.
+        :raises: exception.SMIMEValidationError if it is not possible to verify
+                 the signature.
+        """
+        verifier = smime.SMIMEVerifier()
+        try:
+            signers, raw_list = verifier.verify(self.content)
+        except Exception as e:
+            raise e
+        else:
+            return True, signers, raw_list
+
+    def _check_endorser(self):
+        """
+        Check the endorsers of an image list.
+
+        :returns: True of False if endorsers are trusted or not.
+        """
+        list_endorser = self.d_contents.get("hv:imagelist", {})
+        list_endorser = list_endorser.get("hv:endorser", {})
+        list_endorser = list_endorser.get("hv:x509", {})
+        if not all(i in list_endorser for i in ("hv:ca", "hv:dn")):
+            logging.error("List '%s' does not contain a valid endorser" %
+                          self.name)
+            return False
+
+        if self.endorser["dn"] != list_endorser["hv:dn"]:
+            logging.error("List '%s' endorser is not trusted, DN mismatch "
+                          "%s != %s" % (self.name, self.endorser["dn"],
+                                        list_endorser["hv:dn"]))
+            return False
+
+        if self.endorser["ca"] != list_endorser["hv:ca"]:
+            logging.error("List '%s' endorser CA is invalid "
+                          "%s != %s" % (self.name, self.endorser["ca"],
+                                        list_endorser["hv:ca"]))
+            return False
+        return True
+
+
 class ImageLists(object):
     def __init__(self):
         self.verifier = smime.SMIMEVerifier()
@@ -51,10 +145,12 @@ class ImageLists(object):
         utils.makedirs(CONF.lists_path)
 
         self.image_lists = {}
-        self.valid_lists = {}
+        self.enabled_lists = []
+        self.disabled_lists = []
+        self.untrusted_lists = []
 
         self._load_data()
-        self._get_lists()
+        self.get_lists()
 
     def _load_data(self):
         """Load YAML image lists."""
@@ -62,103 +158,43 @@ class ImageLists(object):
         with open(CONF.image_lists, "rb") as f:
             self.image_lists = yaml.safe_load(f)
 
-    def _get_lists(self):
-        """Download and store the configured lists."""
+    def _reset_lists(self):
+        self.enabled_lists = []
+        self.disabled_lists = []
+        self.untrusted_lists = []
 
-        self.valid_lists = {}
+    def get_lists(self):
+        """
+        Get the configured lists that can be loaded.
+
+        A list is loaded if it is enabled and can be verified
+        or if it is disabled. We assume that a list that cannot
+        be verified will raise an exception, therefore we do not
+        load it.
+        """
+        self._reset_lists()
 
         for name, list_meta in self.image_lists.iteritems():
-            url = list_meta.get("url", None)
-            enabled = list_meta.get("enabled", True)
-            endorser = list_meta.get("endorser", {})
-
-            if not enabled:
-                continue
-
-            if url is None:
-                logging.error("Skipping image list '%s', no url provided" %
-                              name)
-                continue
-
-            if not all(i in endorser for i in ("dn", "ca")):
-                logging.warning("List '%s' has no valid endorser, it won't "
-                                "be downloaded" % name)
-                continue
-
-            logging.debug("Getting image list '%s' from '%s'" % (name, url))
-
-            # NOTE(aloga): asume that file is small and that we
-            # do not really need to stream it
-            response = requests.get(url)
-            if response.status_code != "200":
-                logging.error("Cannot get image list, reason: (%s) %s" %
-                              (response.status_code, response.reason))
-                continue
+            try:
+                l = List(name,
+                         url=list_meta.get("url", None),
+                         enabled=list_meta.get("enabled", True),
+                         endorser=list_meta.get("endorser", {}),
+                         token=list_meta.get("token", None))
+            except exception.AtropeException as e:
+                logging.error("Skipping list '%s', reason: %s" %
+                              (name, e.message))
+                logging.debug("Exception while downloading list '%s'" % name,
+                              exc_info=e)
             else:
-                l = response.content
+                if l.enabled:
+                    if l.trusted:
+                        self.enabled_lists.append(l)
+                    else:
+                        self.untrusted_lists.append(l)
+                else:
+                    self.disabled_lists.append(l)
 
-            try:
-                signers, raw_list = self.verifier.verify(l)
-            except exception.SMIMEValidationError as e:
-                logging.error("Cannot verify list '%s' downloaded from '%s'" %
-                              (name, url))
-                logging.error(e)
-                continue
-
-            try:
-                contents = json.loads(raw_list)
-            except ValueError:
-                logging.error("Cannot load list '%s', invalid JSON" % name)
-                continue
-
-            # FIXME(aloga): make checks about the list fields that are
-            # needed. This code here is horrible
-            list_endorser = contents.get("hv:imagelist", {})
-            list_endorser = list_endorser.get("hv:endorser", {})
-            list_endorser = list_endorser.get("hv:x509", {})
-            if not all(i in list_endorser for i in ("hv:ca", "hv:dn")):
-                logging.error("List '%s' does not contain a valid endorser" %
-                              name)
-                continue
-
-            if endorser["dn"] != list_endorser["hv:dn"]:
-                logging.error("List '%s' endorser is not trusted, DN "
-                              "mismatch %s != %s" % (name, endorser["dn"],
-                                                     list_endorser["hv:dn"]))
-                continue
-
-            if endorser["ca"] != list_endorser["hv:ca"]:
-                logging.error("List '%s' endorser CA is invalid "
-                              "%s != %s" % (name, endorser["ca"],
-                                            list_endorser["hv:ca"]))
-                continue
-
-            basedir = os.path.join(CONF.lists_path, "%s.list" % name)
-            utils.makedirs(basedir)
-            with open(os.path.join(basedir, name), 'w') as f:
-                f.write(l.content)
-
-            with open(os.path.join(basedir, "%s.raw" % name), 'w') as f:
-                f.write(raw_list)
-
-            self.valid_lists[name] = {
-                "signers": signers,
-                "contents": contents,
-            }
-
-        logging.debug("Loaded the following lists: %s" % self.valid_lists)
-
-    def _verify_list(self, msg):
-        return True
-
-    def _check_stored_lists(self):
-        pass
-        # 1. load directory contents
-        # 2. traverse directory
-        # 3. check against the stored lists
-        #       - if list is disabled, add to disabled
-        #         lists
-        #       - if list is enabled and endorsed is trusted,
-        #         add to enabled lists
-        #       - if list is enabeld and endorser is not trusted,
-        #         add to disabled lists
+        logging.debug("Enabled lists: %s" % self.enabled_lists)
+        logging.debug("Disabled lists: %s" % self.disabled_lists)
+        logging.debug("Untrusted lists: %s" % self.untrusted_lists)

@@ -44,3 +44,7 @@ class AtropeException(Exception):
 
 class SMIMEValidationError(AtropeException):
     msg_fmt = "Could not validate SMIME message: %(exception)s"
+
+
+class ImageListDownloadFailed(AtropeException):
+    msg_fmt = "Cannot get image list, reason: (%(code)s) %(reason)s"
