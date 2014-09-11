@@ -89,9 +89,16 @@ class ImageLists(object):
 
             # NOTE(aloga): asume that file is small and that we
             # do not really need to stream it
-            l = requests.get(url)
+            response = requests.get(url)
+            if response.status_code != "200":
+                logging.error("Cannot get image list, reason: (%s) %s" %
+                              (response.status_code, response.reason))
+                continue
+            else:
+                l = response.content
+
             try:
-                signers, raw_list = self.verifier.verify(l.content)
+                signers, raw_list = self.verifier.verify(l)
             except exception.SMIMEValidationError as e:
                 logging.error("Cannot verify list '%s' downloaded from '%s'" %
                               (name, url))
