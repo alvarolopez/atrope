@@ -15,17 +15,19 @@
 # under the License.
 
 import abc
+import hashlib
 import os.path
 
 import requests
 
 from atrope import exception
+from atrope import utils
 
 
 class BaseImage(object):
     __metaclass__ = abc.ABCMeta
 
-    uri = sha512 = identifier = None
+    uri = sha512 = identifier = location = None
 
     @abc.abstractmethod
     def __init__(self, image_info):
@@ -38,6 +40,21 @@ class BaseImage(object):
 
         :param dest: destionation directory.
         """
+
+    def verify_checksum(self, location=None):
+        """Verify the image's checksum."""
+
+        location = location or self.location
+        if location is None:
+            raise exception.ImageNotFoundOnDisk(location=location)
+
+        sha512 = utils.get_file_checksum(location)
+        if sha512.hexdigest() != self.sha512:
+            raise exception.ImageVerificationFailed(
+                id=self.identifier,
+                expected=self.sha512,
+                obtained=sha512.hexdigest()
+            )
 
 
 class VMCasterImage(BaseImage):
@@ -80,9 +97,12 @@ class VMCasterImage(BaseImage):
         self.identifier = image_dict.get("dc:identifier")
 
     def download(self, basedir):
-        dest = os.path.join(basedir, self.identifier)
+        if self.location is not None:
+            raise exception.ImageAlreadyDownloaded(location=self.location)
 
-        with open(dest, 'wb') as f:
+        location = os.path.join(basedir, self.identifier)
+
+        with open(location, 'wb') as f:
             response = requests.get(self.uri, stream=True)
 
             if not response.ok:
@@ -93,3 +113,5 @@ class VMCasterImage(BaseImage):
                 if block:
                     f.write(block)
                     f.flush()
+        self.verify_checksum(location=location)
+        self.location = location

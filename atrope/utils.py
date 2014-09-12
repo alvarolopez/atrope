@@ -15,6 +15,7 @@
 # under the License.
 
 import errno
+import hashlib
 import os
 
 
@@ -33,3 +34,13 @@ def makedirs(path):
                 raise
         else:
             raise
+
+
+def get_file_checksum(path, block_size=2**20):
+    sha512 = hashlib.sha512()
+    with open(path, "rb") as f:
+        buf = f.read(block_size)
+        while len(buf) > 0:
+            sha512.update(buf)
+            buf = f.read(block_size)
+    return sha512

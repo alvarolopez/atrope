@@ -52,3 +52,15 @@ class ImageListDownloadFailed(AtropeException):
 
 class InvalidImageList(AtropeException):
     msg_fmt = "Image list is not valid: %(reason)s"
+
+
+class ImageAlreadyDownloaded(AtropeException):
+    msg_fmt = "Image already downloaded into %(location)s"
+
+
+class ImageNotFoundOnDisk(AtropeException):
+    msg_fmt = "Image cannot be found on %(location)s"
+
+
+class ImageVerificationFailed(AtropeException):
+    msg_fmt = "Image %(id)s verification failed %(expected)s != %(obtained)s"
