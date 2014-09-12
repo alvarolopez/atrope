@@ -14,6 +14,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import abc
 import os.path
 
 import requests
@@ -22,7 +23,21 @@ from atrope import exception
 
 
 class BaseImage(object):
-    pass
+    __metaclass__ = abc.ABCMeta
+
+    uri = sha512 = identifier = None
+
+    @abc.abstractmethod
+    def __init__(self, image_info):
+        pass
+
+    @abc.abstractmethod
+    def download(self, dest):
+        """
+        Download the image.
+
+        :param dest: destionation directory.
+        """
 
 
 class VMCasterImage(BaseImage):
@@ -49,8 +64,10 @@ class VMCasterImage(BaseImage):
         "sl:osversion",
     )
 
-    def __init__(self, image_dict):
-        image_dict = image_dict.get("hv:image", {})
+    def __init__(self, image_info):
+        super(VMCasterImage, self).__init__(image_info)
+
+        image_dict = image_info.get("hv:image", {})
 
         keys = image_dict.keys()
         if not all(i in keys for i in self.required_fields):
