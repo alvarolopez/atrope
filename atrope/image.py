@@ -14,6 +14,10 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import os.path
+
+import requests
+
 from atrope import exception
 
 
@@ -57,3 +61,18 @@ class VMCasterImage(BaseImage):
         self.uri = image_dict.get("hv:uri")
         self.sha512 = image_dict.get("sl:checksum:sha512")
         self.identifier = image_dict.get("dc:identifier")
+
+    def download(self, basedir):
+        dest = os.path.join(basedir, self.identifier)
+
+        with open(dest, 'wb') as f:
+            response = requests.get(self.uri, stream=True)
+
+            if not response.ok:
+                # FIXME(aloga)
+                pass
+
+            for block in response.iter_content(1024):
+                if block:
+                    f.write(block)
+                    f.flush()

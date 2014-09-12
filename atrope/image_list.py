@@ -225,20 +225,4 @@ class ImageListManager(object):
             utils.makedirs(basedir)
 
             for img in l.images:
-#                img = img.get("hv:image", {})
-                self.download_image(img, basedir)
-
-    def download_image(self, image, dest):
-        dest = os.path.join(dest, image.identifier)
-
-        with open(dest, 'wb') as f:
-            response = requests.get(image.uri, stream=True)
-
-            if not response.ok:
-                # FIXME(aloga)
-                pass
-
-            for block in response.iter_content(1024):
-                if block:
-                    f.write(block)
-                    f.flush()
+                img.download(basedir)
