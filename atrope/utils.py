@@ -18,6 +18,42 @@ import errno
 import hashlib
 import os
 
+import prettytable
+
+
+def print_list(objs, fields, sortby=None):
+    pt = prettytable.PrettyTable([f for f in fields], caching=False)
+    pt.align = 'l'
+    for o in objs:
+        row = []
+        for field in fields:
+            row.append(o.get(field, None))
+        pt.add_row(row)
+
+    result = pt.get_string(sortby=sortby)
+    print(result)
+
+
+def print_dict(d, dict_property="Property", dict_value="Value", wrap=0):
+    pt = prettytable.PrettyTable([dict_property, dict_value], caching=False)
+    pt.align = 'l'
+    for k, v in sorted(d.items()):
+        # if value has a newline, add in multiple rows
+        # e.g. fault with stacktrace
+        if v and isinstance(v, basestring) and r'\n' in v:
+            lines = v.strip().split(r'\n')
+            col1 = k
+            for line in lines:
+                pt.add_row([col1, line])
+                col1 = ''
+        else:
+            if v is None:
+                v = '-'
+            pt.add_row([k, v])
+
+    result = pt.get_string()
+    print(result)
+
 
 def makedirs(path):
     """Recursive directory creation function.
