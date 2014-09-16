@@ -37,8 +37,17 @@ opts = [
                help='Where instances are stored on disk'),
 ]
 
+cli_opts = [
+    cfg.StrOpt('index',
+               help="Show the configured image lists",
+               positional=True),
+]
+
 CONF = cfg.CONF
 CONF.register_opts(opts)
+CONF.register_cli_opts(cli_opts, group='imagelist')
+
+
 
 # FIXME(aloga): this should be configurable
 logging.basicConfig(level=logging.DEBUG)
@@ -66,6 +75,7 @@ class ImageList(object):
 
         self.images = []
 
+    def fetch(self):
         if self.enabled and self.url:
             self.content = self._get()
             self.verified, self.signers, raw_list = self._verify()
@@ -155,6 +165,21 @@ class ImageList(object):
             return False
         return True
 
+    def print_list(self):
+        d = {
+            "name": self.name,
+            "url": self.url,
+            "enabled": self.enabled,
+            # FIXME(aloga): objectify endorser
+            "endorser_dn": self.endorser.get("dn", None),
+            "endorser_ca": self.endorser.get("ca", None),
+        }
+        if self.contents is not None:
+            d["verified"] = self.verified
+            d["trusted"] = self.trusted
+
+        utils.print_dict(d)
+
 
 class ImageListManager(object):
     def __init__(self):
@@ -166,7 +191,8 @@ class ImageListManager(object):
         self.untrusted_lists = None
 
         self._load_data()
-        self.get_lists()
+        self.load_lists()
+#        self.get_lists()
 
     def _load_data(self):
         """Load YAML image lists."""
@@ -175,9 +201,21 @@ class ImageListManager(object):
             self.image_lists = yaml.safe_load(f)
 
     def _reset_lists(self):
+        self.loaded_lists = []
         self.enabled_lists = []
         self.disabled_lists = []
         self.untrusted_lists = []
+
+    def load_lists(self):
+        self._reset_lists()
+
+        for name, list_meta in self.image_lists.iteritems():
+            l = ImageList(name,
+                          url=list_meta.get("url", None),
+                          enabled=list_meta.get("enabled", True),
+                          endorser=list_meta.get("endorser", {}),
+                          token=list_meta.get("token", None))
+            self.loaded_lists.append(l)
 
     def get_lists(self):
         """
