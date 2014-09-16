@@ -16,12 +16,17 @@
 
 import abc
 import hashlib
+import logging
 import os.path
 
 import requests
 
 from atrope import exception
 from atrope import utils
+
+# FIXME(aloga): this should be configurable
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 
 class BaseImage(object):
@@ -96,12 +101,9 @@ class VMCasterImage(BaseImage):
         self.sha512 = image_dict.get("sl:checksum:sha512")
         self.identifier = image_dict.get("dc:identifier")
 
-    def download(self, basedir):
-        if self.location is not None:
-            raise exception.ImageAlreadyDownloaded(location=self.location)
-
-        location = os.path.join(basedir, self.identifier)
-
+    def _download(self, location):
+        logging.debug("Downloading image '%s' into '%s'" %
+                      (self.identifier, location))
         with open(location, 'wb') as f:
             response = requests.get(self.uri, stream=True)
 
@@ -113,5 +115,34 @@ class VMCasterImage(BaseImage):
                 if block:
                     f.write(block)
                     f.flush()
-        self.verify_checksum(location=location)
+        try:
+            self.verify_checksum(location=location)
+        except exception.ImageVerificationFailed as e:
+            logging.error(e)
+        else:
+            logging.debug("Image '%s' downloaded into '%s'" %
+                          (self.identifier, location))
+
+
+    def download(self, basedir):
+        # The image has been already downloaded in this execution.
+        if self.location is not None:
+            raise exception.ImageAlreadyDownloaded(location=self.location)
+
+        location = os.path.join(basedir, self.identifier)
+
+        if not os.path.exists(location):
+            self._download(location)
+        else:
+            # Image exists, is it checksum valid?
+            try:
+                self.verify_checksum(location=location)
+            except exception.ImageVerificationFailed:
+                logging.info("Image '%s' found in '%s' is not valid, "
+                             "downloading again" % (self.identifier,location))
+                self._download(location)
+            else:
+                logging.debug("Image '%s' already downloaded into '%s'" %
+                              (self.identifier,location))
+
         self.location = location
