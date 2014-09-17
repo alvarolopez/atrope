@@ -14,6 +14,9 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import sys
+
+from atrope import exception
 import atrope.image_list
 from atrope import utils
 
@@ -105,4 +108,8 @@ class CommandImageListFetch(Command):
 
 class CommandManager(object):
     def execute(self):
-        CONF.command.func()
+        try:
+            CONF.command.func()
+        except exception.AtropeException as e:
+            print >> sys.stderr, "ERROR: %s" % e
+            sys.exit(1)
