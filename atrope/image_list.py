@@ -177,6 +177,7 @@ class ImageList(object):
         if self.contents is not None:
             d["verified"] = self.verified
             d["trusted"] = self.trusted
+            d["token set"] = self.token and True
             if contents:
                 d["contents"] = pprint.pformat(self.d_contents)
 
