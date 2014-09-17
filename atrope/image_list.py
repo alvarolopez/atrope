@@ -203,7 +203,7 @@ class ImageListManager(object):
             self.image_lists = yaml.safe_load(f)
 
     def _reset_lists(self):
-        self.loaded_lists = []
+        self.loaded_lists = {}
         self.enabled_lists = []
         self.disabled_lists = []
         self.untrusted_lists = []
@@ -217,7 +217,24 @@ class ImageListManager(object):
                           enabled=list_meta.get("enabled", True),
                           endorser=list_meta.get("endorser", {}),
                           token=list_meta.get("token", None))
-            self.loaded_lists.append(l)
+            self.loaded_lists[name] = l
+
+    def _fetch_and_verify(self, l):
+        try:
+            l.fetch()
+        except exception.AtropeException as e:
+            logging.error("Skipping list '%s', reason: %s" %
+                            (name, e.message))
+            logging.debug("Exception while downloading list '%s'" % name,
+                            exc_info=e)
+        return l
+
+    def fetch_list(self, image_list):
+        """Get an individual list."""
+        l = self.loaded_lists.get(image_list)
+        if l is None:
+            raise exception.InvalidImageList(reason="not found in configuration")
+        return self._fetch_and_verify(l)
 
     def fetch_lists(self):
         """
@@ -228,26 +245,23 @@ class ImageListManager(object):
         be verified will raise an exception, therefore we do not
         load it.
         """
-        for l in self.loaded_lists:
-            try:
-                l.fetch()
-            except exception.AtropeException as e:
-                logging.error("Skipping list '%s', reason: %s" %
-                              (name, e.message))
-                logging.debug("Exception while downloading list '%s'" % name,
-                              exc_info=e)
-            else:
-                if l.enabled:
-                    if l.trusted:
-                        self.enabled_lists.append(l)
-                    else:
-                        self.untrusted_lists.append(l)
+        all_lists = []
+        for l in self.loaded_lists.values():
+            l = self._fetch_and_verify(l)
+            if l.enabled:
+                if l.trusted:
+                    self.enabled_lists.append(l)
                 else:
-                    self.disabled_lists.append(l)
+                    self.untrusted_lists.append(l)
+            else:
+                self.disabled_lists.append(l)
+
+            all_lists.append(l)
 
         logging.debug("Enabled lists: %s" % self.enabled_lists)
         logging.debug("Disabled lists: %s" % self.disabled_lists)
         logging.debug("Untrusted lists: %s" % self.untrusted_lists)
+        return all_lists
 
     def download_images(self):
         """Download the images to disk."""

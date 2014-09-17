@@ -57,7 +57,7 @@ class CommandImageListIndex(Command):
         # TODO(aloga): wrap the fields, since the output is huge
         fields = ["name", "url", "enabled", "endorser"]
         objs = []
-        for l in manager.loaded_lists:
+        for l in manager.loaded_lists.values():
             d = {}
             for f in fields:
                 d[f] = getattr(l, f)
@@ -67,7 +67,7 @@ class CommandImageListIndex(Command):
 
 class CommandImageListFetch(Command):
     def __init__(self, parser, name="imagelist-fetch",
-                 cmd_help="Fetch the configured image lists"):
+                 cmd_help="Fetch and verify the configured image lists."):
         super(CommandImageListFetch, self).__init__(parser, name, cmd_help)
 
         self.parser.add_argument("-c",
@@ -77,10 +77,19 @@ class CommandImageListFetch(Command):
                                  action="store_true",
                                  help="Show the list contents")
 
+        self.parser.add_argument("list",
+                                 default=None,
+                                 nargs='?',
+                                 help="Image list to fetch.")
+
     def run(self):
         manager = atrope.image_list.ImageListManager()
-        manager.fetch_lists()
-        for l in manager.loaded_lists:
+        if CONF.command.list is not None:
+            lists = [manager.fetch_list(CONF.command.list)]
+        else:
+            lists = manager.fetch_lists()
+
+        for l in lists:
             l.print_list(contents=CONF.command.contents)
 
 
