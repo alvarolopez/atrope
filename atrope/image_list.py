@@ -70,12 +70,23 @@ class ImageList(object):
         self.signers = None
         self.verified = False
         self.trusted = False
+        self.error = None
 
         self.contents = None
         self.d_contents = {}
 
         self.images = []
 
+    def _set_error(func):
+        def decorated(self):
+            try:
+                func(self)
+            except Exception as e:
+                self.error = e
+                raise e
+        return decorated
+
+    @_set_error
     def fetch(self):
         if self.enabled and self.url:
             self.contents = self._fetch()
@@ -148,20 +159,23 @@ class ImageList(object):
         list_endorser = list_endorser.get("hv:endorser", {})
         list_endorser = list_endorser.get("hv:x509", {})
         if not all(i in list_endorser for i in ("hv:ca", "hv:dn")):
-            logging.error("List '%s' does not contain a valid endorser" %
-                          self.name)
+            msg = "List '%s' does not contain a valid endorser" % self.name
+            logging.error(msg)
+            self.error = msg
             return False
 
         if self.endorser["dn"] != list_endorser["hv:dn"]:
-            logging.error("List '%s' endorser is not trusted, DN mismatch "
-                          "%s != %s" % (self.name, self.endorser["dn"],
-                                        list_endorser["hv:dn"]))
+            msg = ("List '%s' endorser is not trusted, DN mismatch %s != %s" %
+                   (self.name, self.endorser["dn"], list_endorser["hv:dn"]))
+            logging.error(msg)
+            self.error = msg
             return False
 
         if self.endorser["ca"] != list_endorser["hv:ca"]:
-            logging.error("List '%s' endorser CA is invalid "
-                          "%s != %s" % (self.name, self.endorser["ca"],
-                                        list_endorser["hv:ca"]))
+            msg = ("List '%s' endorser CA is invalid %s != %s" %
+                   (self.name, self.endorser["ca"], list_endorser["hv:ca"]))
+            logging.error(msg)
+            self.error = msg
             return False
         return True
 
@@ -177,6 +191,8 @@ class ImageList(object):
         d["verified"] = self.verified
         d["trusted"] = self.trusted
         d["token set"] = self.token and True
+        if self.error is not None:
+            d["error"] = self.error
         if self.contents is not None and contents:
             d["contents"] = pprint.pformat(self.d_contents)
 
