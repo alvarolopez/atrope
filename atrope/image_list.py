@@ -174,12 +174,11 @@ class ImageList(object):
             "endorser_dn": self.endorser.get("dn", None),
             "endorser_ca": self.endorser.get("ca", None),
         }
-        if self.contents is not None:
-            d["verified"] = self.verified
-            d["trusted"] = self.trusted
-            d["token set"] = self.token and True
-            if contents:
-                d["contents"] = pprint.pformat(self.d_contents)
+        d["verified"] = self.verified
+        d["trusted"] = self.trusted
+        d["token set"] = self.token and True
+        if self.contents is not None and contents:
+            d["contents"] = pprint.pformat(self.d_contents)
 
         utils.print_dict(d)
 
@@ -213,8 +212,8 @@ class ImageListManager(object):
             l.fetch()
         except exception.AtropeException as e:
             logging.error("Error loading list '%s', reason: %s" %
-                            (name, e.message))
-            logging.debug("Exception while downloading list '%s'" % name,
+                            (l.name, e.message))
+            logging.debug("Exception while downloading list '%s'" % l.name,
                             exc_info=e)
         return l
 
