@@ -83,7 +83,7 @@ class ImageList(object):
                 func(self)
             except Exception as e:
                 self.error = e
-                raise e
+                raise
         return decorated
 
     @_set_error
@@ -142,8 +142,8 @@ class ImageList(object):
         verifier = smime.SMIMEVerifier()
         try:
             signers, raw_list = verifier.verify(self.contents)
-        except Exception as e:
-            raise e
+        except Exception:
+            raise
         else:
             return True, signers, raw_list
 
