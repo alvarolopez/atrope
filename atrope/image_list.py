@@ -33,7 +33,7 @@ opts = [
     cfg.StrOpt('image_lists',
                default='/etc/atrope/lists.yaml',
                help='Report definition location.'),
-    cfg.StrOpt('lists_path',
+    cfg.StrOpt('cache_dir',
                default=paths.state_path_def('lists'),
                help='Where instances are stored on disk'),
 ]
@@ -199,10 +199,11 @@ class ImageList(object):
 
 class ImageListManager(object):
     def __init__(self):
-        utils.makedirs(CONF.lists_path)
-
         self.configured_lists = {}
         self.loaded_lists = None
+
+        self.cache_dir = os.path.abspath(CONF.cache_dir)
+        utils.makedirs(self.cache_dir)
 
         with open(CONF.image_lists, "rb") as f:
             image_lists = yaml.safe_load(f)
@@ -250,3 +251,32 @@ class ImageListManager(object):
     def load_lists(self):
         if self.loaded_lists is None:
             self.loaded_lists = self.fetch_lists()
+
+    def sync_cache(self):
+        self.load_lists()
+
+        valid_paths = [self.cache_dir]
+        invalid_paths = []
+
+        for l in self.loaded_lists:
+            if l.enabled:
+                basedir = os.path.join(self.cache_dir, l.name)
+                valid_paths.append(basedir)
+                imgdir = os.path.join(self.cache_dir, l.name, 'images')
+                if l.trusted and l.verified:
+                    utils.makedirs(imgdir)
+                    valid_paths.append(imgdir)
+                    for img in l.images:
+                        img.download(imgdir)
+                        valid_paths.append(img.location)
+
+        for root, dirs, files in os.walk(self.cache_dir):
+            if root not in valid_paths:
+                invalid_paths.append(root)
+            for i in files + dirs:
+                i = os.path.join(root, i)
+                if i not in valid_paths:
+                    invalid_paths.append(i)
+
+        logging.debug("Removing %s from cache directory." % invalid_paths)
+        utils.rmtree(basedir)
