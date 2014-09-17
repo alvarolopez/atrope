@@ -60,7 +60,9 @@ class SMIMEVerifier(object):
 
         signers = p7.get0_signers(M2Crypto.X509.X509_Stack())
         if len(signers) == 0:
-            exception.SMIMEValidationError(exception='no certificates found')
+            raise exception.SMIMEValidationError(
+                exception='no certificates found'
+            )
 
         signer = [(str(c.get_subject()), str(c.get_issuer())) for c in signers]
 
