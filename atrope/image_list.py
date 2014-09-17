@@ -267,8 +267,14 @@ class ImageListManager(object):
                     utils.makedirs(imgdir)
                     valid_paths.append(imgdir)
                     for img in l.images:
-                        img.download(imgdir)
-                        valid_paths.append(img.location)
+                        try:
+                            img.download(imgdir)
+                        except exception.ImageVerificationFailed:
+                            # FIXME(aloga): we should notify about this in the
+                            # cmd line.
+                            pass
+                        else:
+                            valid_paths.append(img.location)
 
         for root, dirs, files in os.walk(self.cache_dir):
             if root not in valid_paths:

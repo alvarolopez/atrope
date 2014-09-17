@@ -118,6 +118,7 @@ class VMCasterImage(BaseImage):
             self.verify_checksum(location=location)
         except exception.ImageVerificationFailed as e:
             logging.error(e)
+            raise
         else:
             logging.debug("Image '%s' downloaded into '%s'" %
                           (self.identifier, location))
