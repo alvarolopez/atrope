@@ -187,43 +187,31 @@ class ImageListManager(object):
     def __init__(self):
         utils.makedirs(CONF.lists_path)
 
-        self.image_lists = {}
+        self.configured_lists = {}
         self.loaded_lists = None
-        self.enabled_lists = None
-        self.disabled_lists = None
-        self.untrusted_lists = None
-
-        self._load_data()
-        self.load_lists()
-
-    def _load_data(self):
-        """Load YAML image lists."""
 
         with open(CONF.image_lists, "rb") as f:
-            self.image_lists = yaml.safe_load(f)
+            image_lists = yaml.safe_load(f)
 
-    def _reset_lists(self):
-        self.loaded_lists = {}
-        self.enabled_lists = []
-        self.disabled_lists = []
-        self.untrusted_lists = []
-
-    def load_lists(self):
-        self._reset_lists()
-
-        for name, list_meta in self.image_lists.iteritems():
+        for name, list_meta in image_lists.iteritems():
             l = ImageList(name,
                           url=list_meta.get("url", None),
                           enabled=list_meta.get("enabled", True),
                           endorser=list_meta.get("endorser", {}),
                           token=list_meta.get("token", None))
-            self.loaded_lists[name] = l
+            self.configured_lists[name] = l
 
     def _fetch_and_verify(self, l):
+        """
+        Fetch and verify an image list.
+
+        If there are errors loading the list the appropriate attributes won't
+        be set, so there is no need to fail here, but rather return the list.
+        """
         try:
             l.fetch()
         except exception.AtropeException as e:
-            logging.error("Skipping list '%s', reason: %s" %
+            logging.error("Error loading list '%s', reason: %s" %
                             (name, e.message))
             logging.debug("Exception while downloading list '%s'" % name,
                             exc_info=e)
@@ -231,46 +219,20 @@ class ImageListManager(object):
 
     def fetch_list(self, image_list):
         """Get an individual list."""
-        l = self.loaded_lists.get(image_list)
+        l = self.configured_lists.get(image_list)
         if l is None:
             raise exception.InvalidImageList(reason="not found in configuration")
         return self._fetch_and_verify(l)
 
     def fetch_lists(self):
-        """
-        Get the configured lists that can be loaded.
-
-        A list is loaded if it is enabled and can be verified
-        or if it is disabled. We assume that a list that cannot
-        be verified will raise an exception, therefore we do not
-        load it.
-        """
+        """Get all the configured lists."""
         all_lists = []
-        for l in self.loaded_lists.values():
+        for l in self.configured_lists.values():
             l = self._fetch_and_verify(l)
-            if l.enabled:
-                if l.trusted:
-                    self.enabled_lists.append(l)
-                else:
-                    self.untrusted_lists.append(l)
-            else:
-                self.disabled_lists.append(l)
-
             all_lists.append(l)
 
-        logging.debug("Enabled lists: %s" % self.enabled_lists)
-        logging.debug("Disabled lists: %s" % self.disabled_lists)
-        logging.debug("Untrusted lists: %s" % self.untrusted_lists)
         return all_lists
 
-    def download_images(self):
-        """Download the images to disk."""
-        if self.enabled_lists is None:
-            self.get_lists()
-
-        for l in self.enabled_lists:
-            basedir = os.path.join(CONF.lists_path, l.name, 'images')
-            utils.makedirs(basedir)
-
-            for img in l.images:
-                img.download(basedir)
+    def load_lists(self):
+        if self.loaded_lists is None:
+            self.loaded_lists = self.fetch_lists()
