@@ -17,6 +17,7 @@
 import json
 import logging
 import os.path
+import pprint
 
 from oslo.config import cfg
 import requests
@@ -77,7 +78,7 @@ class ImageList(object):
 
     def fetch(self):
         if self.enabled and self.url:
-            self.content = self._get()
+            self.contents = self._fetch()
             self.verified, self.signers, raw_list = self._verify()
             # FIXME(aloga): We should check that the JSON is valid, and that
             # load the data into the object.
@@ -88,7 +89,6 @@ class ImageList(object):
 
             img_list = self.d_contents.get("hv:imagelist", {})
             for img in img_list.get("hv:images"):
-                print img
                 self.images.append(image.VMCasterImage(img))
 
             self.trusted = self._check_endorser()
@@ -99,7 +99,7 @@ class ImageList(object):
             self.name
         )
 
-    def _get(self):
+    def _fetch(self):
         """
         Get the image list from the server.
 
@@ -130,7 +130,7 @@ class ImageList(object):
         """
         verifier = smime.SMIMEVerifier()
         try:
-            signers, raw_list = verifier.verify(self.content)
+            signers, raw_list = verifier.verify(self.contents)
         except Exception as e:
             raise e
         else:
@@ -165,7 +165,7 @@ class ImageList(object):
             return False
         return True
 
-    def print_list(self):
+    def print_list(self, contents=False):
         d = {
             "name": self.name,
             "url": self.url,
@@ -177,6 +177,8 @@ class ImageList(object):
         if self.contents is not None:
             d["verified"] = self.verified
             d["trusted"] = self.trusted
+            if contents:
+                d["contents"] = pprint.pformat(self.d_contents)
 
         utils.print_dict(d)
 
@@ -186,13 +188,13 @@ class ImageListManager(object):
         utils.makedirs(CONF.lists_path)
 
         self.image_lists = {}
+        self.loaded_lists = None
         self.enabled_lists = None
         self.disabled_lists = None
         self.untrusted_lists = None
 
         self._load_data()
         self.load_lists()
-#        self.get_lists()
 
     def _load_data(self):
         """Load YAML image lists."""
@@ -217,7 +219,7 @@ class ImageListManager(object):
                           token=list_meta.get("token", None))
             self.loaded_lists.append(l)
 
-    def get_lists(self):
+    def fetch_lists(self):
         """
         Get the configured lists that can be loaded.
 
@@ -226,15 +228,9 @@ class ImageListManager(object):
         be verified will raise an exception, therefore we do not
         load it.
         """
-        self._reset_lists()
-
-        for name, list_meta in self.image_lists.iteritems():
+        for l in self.loaded_lists:
             try:
-                l = ImageList(name,
-                         url=list_meta.get("url", None),
-                         enabled=list_meta.get("enabled", True),
-                         endorser=list_meta.get("endorser", {}),
-                         token=list_meta.get("token", None))
+                l.fetch()
             except exception.AtropeException as e:
                 logging.error("Skipping list '%s', reason: %s" %
                               (name, e.message))

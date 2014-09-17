@@ -25,6 +25,7 @@ CONF = cfg.CONF
 
 def add_command_parsers(subparsers):
     CommandImageListIndex(subparsers)
+    CommandImageListFetch(subparsers)
 
 command_opt = cfg.SubCommandOpt('command',
                                 title='Commands',
@@ -53,6 +54,7 @@ class CommandImageListIndex(Command):
 
     def run(self):
         manager = atrope.image_list.ImageListManager()
+        # TODO(aloga): wrap the fields, since the output is huge
         fields = ["name", "url", "enabled", "endorser"]
         objs = []
         for l in manager.loaded_lists:
@@ -61,6 +63,35 @@ class CommandImageListIndex(Command):
                 d[f] = getattr(l, f)
             objs.append(d)
         utils.print_list(objs, fields)
+
+
+class CommandImageListFetch(Command):
+    def __init__(self, parser, name="imagelist-fetch",
+                 cmd_help="Fetch the configured image lists"):
+        super(CommandImageListFetch, self).__init__(parser, name, cmd_help)
+
+        self.parser.add_argument("-c",
+                                 "--contents",
+                                 dest="contents",
+                                 default=False,
+                                 action="store_true",
+                                 help="Show the list contents")
+
+    def run(self):
+        manager = atrope.image_list.ImageListManager()
+        manager.fetch_lists()
+        for l in manager.loaded_lists:
+            l.print_list(contents=CONF.command.contents)
+
+
+#class CommandImageListDownload(Command):
+#    def __init__(self, parser, name="imagelist-download",
+#                 cmd_help="Fetch the configured image lists"):
+#        super(CommandImageListFetch, self).__init__(parser, name, cmd_help)
+#
+#    def run(self):
+#        manager = atrope.image_list.ImageListManager()
+#        manager.fetch_lists()
 
 
 class CommandManager(object):
