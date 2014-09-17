@@ -20,7 +20,6 @@ from atrope import exception
 import atrope.image_list
 from atrope import utils
 
-import prettytable
 from oslo.config import cfg
 
 CONF = cfg.CONF
@@ -42,8 +41,7 @@ class Command(object):
     def __init__(self, parser, name, cmd_help):
         self.name = name
         self.cmd_help = cmd_help
-        self.parser = parser.add_parser(name,
-                                            help=cmd_help)
+        self.parser = parser.add_parser(name, help=cmd_help)
         self.parser.set_defaults(func=self.run)
 
     def run(self):
@@ -94,16 +92,6 @@ class CommandImageListFetch(Command):
 
         for l in lists:
             l.print_list(contents=CONF.command.contents)
-
-
-#class CommandImageListDownload(Command):
-#    def __init__(self, parser, name="imagelist-download",
-#                 cmd_help="Fetch the configured image lists"):
-#        super(CommandImageListFetch, self).__init__(parser, name, cmd_help)
-#
-#    def run(self):
-#        manager = atrope.image_list.ImageListManager()
-#        manager.fetch_lists()
 
 
 class CommandManager(object):

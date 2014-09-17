@@ -72,7 +72,7 @@ def makedirs(path):
             raise
 
 
-def get_file_checksum(path, block_size=2**20):
+def get_file_checksum(path, block_size=2 ** 20):
     sha512 = hashlib.sha512()
     with open(path, "rb") as f:
         buf = f.read(block_size)

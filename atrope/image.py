@@ -15,7 +15,6 @@
 # under the License.
 
 import abc
-import hashlib
 import logging
 import os.path
 
@@ -123,7 +122,6 @@ class VMCasterImage(BaseImage):
             logging.debug("Image '%s' downloaded into '%s'" %
                           (self.identifier, location))
 
-
     def download(self, basedir):
         # The image has been already downloaded in this execution.
         if self.location is not None:
@@ -139,10 +137,10 @@ class VMCasterImage(BaseImage):
                 self.verify_checksum(location=location)
             except exception.ImageVerificationFailed:
                 logging.info("Image '%s' found in '%s' is not valid, "
-                             "downloading again" % (self.identifier,location))
+                             "downloading again" % (self.identifier, location))
                 self._download(location)
             else:
                 logging.debug("Image '%s' already downloaded into '%s'" %
-                              (self.identifier,location))
+                              (self.identifier, location))
 
         self.location = location

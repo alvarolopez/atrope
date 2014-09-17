@@ -48,8 +48,6 @@ CONF = cfg.CONF
 CONF.register_opts(opts)
 CONF.register_cli_opts(cli_opts, group='imagelist')
 
-
-
 # FIXME(aloga): this should be configurable
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -228,16 +226,16 @@ class ImageListManager(object):
             l.fetch()
         except exception.AtropeException as e:
             logging.error("Error loading list '%s', reason: %s" %
-                            (l.name, e.message))
+                          (l.name, e.message))
             logging.debug("Exception while downloading list '%s'" % l.name,
-                            exc_info=e)
+                          exc_info=e)
         return l
 
     def fetch_list(self, image_list):
         """Get an individual list."""
         l = self.configured_lists.get(image_list)
         if l is None:
-            raise exception.InvalidImageList(reason="not found in configuration")
+            raise exception.InvalidImageList(reason="not found in config")
         return self._fetch_and_verify(l)
 
     def fetch_lists(self):
