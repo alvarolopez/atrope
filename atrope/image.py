@@ -61,44 +61,43 @@ class BaseImage(object):
             )
 
 
-class VMCasterImage(BaseImage):
-    # TODO(aloga): are all of this really required?
-    required_fields = (
-        "ad:group",
-        "ad:mpuri",
-        "ad:user:fullname",
-        "ad:user:guid",
-        "ad:user:uri",
-        "dc:description",
-        "dc:identifier",
-        "dc:title",
-        "hv:hypervisor",
-        "hv:format",
-        "hv:size",
-        "hv:uri",
-        "hv:version",
-        "sl:arch",
-        "sl:checksum:sha512",
-        "sl:comments",
-        "sl:os",
-        "sl:osname",
-        "sl:osversion",
-    )
+class HepixImage(BaseImage):
+    field_map = {
+        "ad:group": "group",
+        "ad:mpuri": "mpuri",
+        "ad:user:fullname": "user_fullname",
+        "ad:user:guid": "user_guid",
+        "ad:user:uri": "user_uri",
+        "dc:description": "description",
+        "dc:identifier": "identifier",
+        "dc:title": "title",
+        "hv:hypervisor": "hypervisor",
+        "hv:format": "format",
+        "hv:size": "size",
+        "hv:uri": "uri",
+        "hv:version": "version",
+        "sl:arch": "arch",
+        "sl:checksum:sha512": "sha512",
+        "sl:comments": "comments",
+        "sl:os": "os",
+        "sl:osname": "osname",
+        "sl:osversion": "osversion",
+    }
+    required_fields = field_map.keys()
 
     def __init__(self, image_info):
-        super(VMCasterImage, self).__init__(image_info)
+        super(HepixImage, self).__init__(image_info)
 
         image_dict = image_info.get("hv:image", {})
 
-        keys = image_dict.keys()
-        if not all(i in keys for i in self.required_fields):
-            raise exception.InvalidImageList(
-                reason="Invalid image definition."
-            )
+        for i in self.required_fields:
+            value = image_dict.get(i, None)
+            if value is None:
+                reason = "Invalid image definition, missing '%s'" % i
+                raise exception.InvalidImageList(reason=reason)
 
-        self.uri = image_dict.get("hv:uri")
-        self.sha512 = image_dict.get("sl:checksum:sha512")
-        self.identifier = image_dict.get("dc:identifier")
+            attr = self.field_map.get(i)
+            setattr(self, attr, value)
 
     def _download(self, location):
         logging.debug("Downloading image '%s' into '%s'" %

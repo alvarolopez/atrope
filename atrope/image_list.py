@@ -139,7 +139,7 @@ class ImageList(object):
 
             img_list = self.d_contents.get("hv:imagelist", {})
             for img in img_list.get("hv:images"):
-                self.images.append(image.VMCasterImage(img))
+                self.images.append(image.HepixImage(img))
 
             self.trusted = self._check_endorser()
 
