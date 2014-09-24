@@ -57,7 +57,7 @@ logger = logging.getLogger(__name__)
 class ImageList(object):
     """An image list."""
 
-    def __init__(self, name, url=None, enabled=True, endorser={}, token=None):
+    def __init__(self, name, url="", enabled=True, endorser={}, token=""):
         self.name = name
 
         self.url = url
@@ -300,10 +300,10 @@ class YamlImageListManager(BaseImageListManager):
 
         for name, list_meta in image_lists.iteritems():
             l = ImageList(name,
-                          url=list_meta.get("url", None),
+                          url=list_meta.get("url", ""),
                           enabled=list_meta.get("enabled", True),
                           endorser=list_meta.get("endorser", {}),
-                          token=list_meta.get("token", None))
+                          token=list_meta.get("token", ""))
             self.configured_lists[name] = l
 
     def add_image_list_source(self, image_list, force=False):
