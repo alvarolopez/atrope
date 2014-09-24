@@ -18,6 +18,7 @@ import errno
 import hashlib
 import shutil
 import os
+import os.path
 
 import prettytable
 
@@ -54,6 +55,23 @@ def print_dict(d, dict_property="Property", dict_value="Value", wrap=0):
 
     result = pt.get_string()
     print(result)
+
+
+def rm(path):
+    """Remove a file or directory."""
+    try:
+        if os.path.isdir(path):
+            # delete folder
+            rmtree(path)
+        else:
+            # delete file
+            print path
+            os.remove(path)
+    except OSError as exc:
+        if exc.errno == errno.ENOENT:
+            pass
+        else:
+            raise
 
 
 def rmtree(path):

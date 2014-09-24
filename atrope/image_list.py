@@ -340,8 +340,10 @@ class BaseImageListManager(object):
                 if i not in valid_paths:
                     invalid_paths.append(i)
 
-        logging.debug("Removing %s from cache directory." % invalid_paths)
-        utils.rmtree(basedir)
+        logging.debug("Marked %s as invalid cache files/dirs." % invalid_paths)
+        for i in invalid_paths:
+            logging.debug("Removing %s from cache directory." % i)
+            utils.rm(i)
 
 
 class YamlImageListManager(BaseImageListManager):
