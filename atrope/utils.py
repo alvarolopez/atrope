@@ -95,8 +95,11 @@ def get_file_checksum(path, block_size=2 ** 20):
 
 
 def yn_question(msg="Enabled", default=True):
-    if default:
+    if default is True:
         default = "y"
+    else:
+        default = "n"
+
     yn = raw_input("%s (y/n) [%s]: " % (msg, default)).lower() or default
     if yn == "y":
         return True

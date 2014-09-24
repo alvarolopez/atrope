@@ -55,7 +55,61 @@ class CommandImageListAdd(Command):
                  cmd_help="Add a list to the configured image lists"):
         super(CommandImageListAdd, self).__init__(parser, name, cmd_help)
 
-    def _get_values(self):
+        self.parser.add_argument("list_id",
+                                 default=None,
+                                 nargs='?',
+                                 help="List ID to add.")
+
+        self.parser.add_argument("-u",
+                                 "--url",
+                                 dest="url",
+                                 metavar="URL",
+                                 default="",
+                                 help="List URL")
+
+        self.parser.add_argument("-o",
+                                 "--endorser_dn",
+                                 dest="endorser_dn",
+                                 metavar="DN",
+                                 default="",
+                                 help="Endorser's DN")
+
+        self.parser.add_argument("-c",
+                                 "--endorser_ca",
+                                 dest="endorser_ca",
+                                 metavar="CA DN",
+                                 default="",
+                                 help="Endorser's CA DN")
+
+        self.parser.add_argument("-t",
+                                 "--token",
+                                 dest="token",
+                                 metavar="TOKEN",
+                                 default="",
+                                 help="Access token to use")
+
+        self.parser.add_argument("-f",
+                                 "--force",
+                                 dest="force",
+                                 default=False,
+                                 action="store_true",
+                                 help="Overwrite list if it exists")
+
+        group = self.parser.add_mutually_exclusive_group()
+        group.add_argument("-e",
+                           "--enabled",
+                           dest="enabled",
+                           default=True,
+                           action="store_true",
+                           help="Add list as enabled (default)")
+
+        group.add_argument("-d",
+                           "--disabled",
+                           dest="enabled",
+                           action="store_false",
+                           help="Add list as disabled")
+
+    def _get_values(self, url, token, enabled, endorser):
         def get_endorser(default={}):
             print "Enter endorser details."
             dn = raw_input("\tEndorser DN [%s]: " %
@@ -88,10 +142,7 @@ class CommandImageListAdd(Command):
             }
             utils.print_dict(d)
 
-        identifier = url = token = ""
-        endorser = {}
-        enabled = correct = True
-
+        identifier = ""
         while True:
             identifier = get_str("list id", mandatory=True, default=identifier)
             url = get_str("list URL", default=url)
@@ -111,17 +162,53 @@ class CommandImageListAdd(Command):
         return identifier, url, enabled, endorser, token
 
     def run(self):
+        identifier = CONF.command.list_id
+        url = CONF.command.url
+        token = CONF.command.token
+        enabled = CONF.command.enabled
+        force = CONF.command.force
+        endorser_dn = CONF.command.endorser_dn
+        endorser_ca = CONF.command.endorser_ca
+        if (endorser_dn is "") == (endorser_ca is ""):
+            if CONF.command.endorser_dn:
+                endorser = {"dn": endorser_dn,
+                            "ca": endorser_ca}
+            else:
+                endorser = {}
+
+        if identifier is None:
+            self.add_interative(url, token, enabled, endorser, force)
+        else:
+            self.add_non_interactive(identifier, url, token,
+                                     enabled, endorser, force)
+
+    def add_non_interactive(self, identifier, url, token,
+                            enabled, endorser, force):
+        image_list = atrope.image_list.ImageListSource(identifier,
+                                                       url,
+                                                       enabled=enabled,
+                                                       endorser=endorser,
+                                                       token=token)
+
+        manager = atrope.image_list.YamlImageListManager()
+        manager.add_image_list_source(image_list, force=force)
+        manager.write_image_list_sources()
+
+    def add_interative(self, url, token, enabled, endorser, force):
         print "Adding image list, enter the following details (Ctr+C to exit)"
-        identifier, url, enabled, endorser, token = self._get_values()
-        image_list = atrope.image_list.ImageList(identifier,
-                                                 url,
-                                                 enabled=enabled,
-                                                 endorser=endorser,
-                                                 token=token)
+        identifier, url, enabled, endorser, token = self._get_values(url,
+                                                                     token,
+                                                                     enabled,
+                                                                     endorser)
+        image_list = atrope.image_list.ImageListSource(identifier,
+                                                       url,
+                                                       enabled=enabled,
+                                                       endorser=endorser,
+                                                       token=token)
 
         manager = atrope.image_list.YamlImageListManager()
         try:
-            manager.add_image_list_source(image_list)
+            manager.add_image_list_source(image_list, force=force)
             manager.write_image_list_sources()
         except exception.DuplicatedImageList:
             msg = "Image with id '%s' already in index, update?" % identifier
@@ -167,7 +254,7 @@ class CommandImageListFetch(Command):
                                  help="Image list to fetch.")
 
     def run(self):
-        manager = atrope.image_list.ImageListManager()
+        manager = atrope.image_list.YamlImageListManager()
         if CONF.command.list is not None:
             lists = [manager.fetch_list(CONF.command.list)]
         else:
