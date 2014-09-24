@@ -14,7 +14,27 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+from atrope import exception
 
-class Endorsers(object):
-    def check_endorser(self, *args, **kwargs):
-        return True
+
+class Endorser(object):
+    required_fields = (
+        "dc:creator",
+        "hv:ca",
+        "hv:dn",
+        "hv:email",
+    )
+
+    def __init__(self, meta):
+        # FIXME(aloga): DRY this
+        meta = meta.get("hv:x509")
+
+        keys = meta.keys()
+        if not all([i in keys for i in self.required_fields]):
+            reason = "Invalid image list, missing mandatory fields"
+            raise exception.InvalidImageList(reason=reason)
+
+        self.name = meta["dc:creator"]
+        self.dn = meta["hv:dn"]
+        self.ca = meta["hv:ca"]
+        self.email = meta["hv:email"]

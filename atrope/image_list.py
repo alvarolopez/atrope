@@ -24,6 +24,7 @@ from oslo.config import cfg
 import requests
 import yaml
 
+from atrope import endorser
 from atrope import exception
 from atrope import image
 from atrope import paths
@@ -52,6 +53,41 @@ CONF.register_cli_opts(cli_opts, group='imagelist')
 # FIXME(aloga): this should be configurable
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
+
+
+class HepixImageList(object):
+#hv:imagelist
+    required_fields = (
+        "dc:date:created",
+        "dc:date:expires",
+        "hv:endorser",
+        "dc:identifier",
+        "dc:description",
+        "dc:title",
+        "hv:images",
+        "dc:source",
+        "hv:version",
+        "hv:uri",
+    )
+
+    def __init__(self, meta):
+        meta = meta.get("hv:imagelist", {})
+        keys = meta.keys()
+        if not all([i in keys for i in self.required_fields]):
+            reason = "Invalid image list, missing mandatory fields"
+            raise exception.InvalidImageList(reason=reason)
+
+        self.created = meta["dc:date:created"]
+        self.expired = meta["dc:date:expires"]
+        self.uuid = meta["dc:identifier"]
+        self.description = meta["dc:description"]
+        self.name = meta["dc:title"]
+        self.source = meta["dc:source"]
+        self.version = meta["hv:version"]
+        self.uri = meta["hv:uri"]
+
+        endorser_meta = meta.get("hv:endorser")
+        self.endorser = endorser.Endorser(endorser_meta)
 
 
 class ImageList(object):
@@ -96,6 +132,10 @@ class ImageList(object):
                 self.d_contents = json.loads(raw_list)
             except ValueError:
                 raise exception.InvalidImageList(reason="Invalid JSON.")
+
+            print "*"*90
+            HepixImageList(self.d_contents)
+            print "*"*90
 
             img_list = self.d_contents.get("hv:imagelist", {})
             for img in img_list.get("hv:images"):
