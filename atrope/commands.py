@@ -105,6 +105,8 @@ class CommandImageListAdd(Command):
             correct = utils.yn_question(msg=msg)
             if correct:
                 break
+            print
+            print "OK, lets try again"
 
         return identifier, url, enabled, endorser, token
 
@@ -192,3 +194,6 @@ class CommandManager(object):
         except exception.AtropeException as e:
             print >> sys.stderr, "ERROR: %s" % e
             sys.exit(1)
+        except KeyboardInterrupt:
+            print >> sys.stderr, "\nExiting..."
+            sys.exit(0)
