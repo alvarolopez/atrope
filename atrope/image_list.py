@@ -15,11 +15,14 @@
 # under the License.
 
 import abc
+import datetime
 import json
 import logging
 import os.path
 import pprint
 
+import dateutil.parser
+import dateutil.tz
 from oslo.config import cfg
 import requests
 import yaml
@@ -82,8 +85,8 @@ class HepixImageList(object):
             reason = "Invalid image list, missing mandatory fields"
             raise exception.InvalidImageList(reason=reason)
 
-        self.created = meta["dc:date:created"]
-        self.expired = meta["dc:date:expires"]
+        self.created = dateutil.parser.parse(meta["dc:date:created"])
+        self.expires = dateutil.parser.parse(meta["dc:date:expires"])
         self.uuid = meta["dc:identifier"]
         self.description = meta["dc:description"]
         self.name = meta["dc:title"]
@@ -117,6 +120,7 @@ class ImageListSource(object):
         self.signers = None
         self.verified = False
         self.trusted = False
+        self.expired = None
         self.error = None
 
         self.contents = None
@@ -142,6 +146,7 @@ class ImageListSource(object):
 
             self.image_list = HepixImageList(list_as_dict)
 
+            self.expired = self._check_expiry()
             self.trusted = self._check_endorser()
 
     def __repr__(self):
@@ -211,6 +216,14 @@ class ImageListSource(object):
             return False
         return True
 
+    def _check_expiry(self):
+        now = datetime.datetime.now(dateutil.tz.tzlocal())
+        if self.image_list.expires < now:
+            logging.info("List '%s' expired on '%s'" %
+                         (self.name, self.image_list.expires))
+            return True
+        return False
+
     def print_list(self, contents=False):
         d = {
             "name": self.name,
@@ -221,6 +234,7 @@ class ImageListSource(object):
         }
         d["verified"] = self.verified
         d["trusted"] = self.trusted
+        d["expired"] = self.expired
         d["token set"] = self.token and True
         if self.error is not None:
             d["error"] = self.error
@@ -297,7 +311,7 @@ class BaseImageListManager(object):
                 basedir = os.path.join(self.cache_dir, l.name)
                 valid_paths.append(basedir)
                 imgdir = os.path.join(self.cache_dir, l.name, 'images')
-                if l.trusted and l.verified:
+                if l.trusted and l.verified and not l.expired:
                     utils.makedirs(imgdir)
                     valid_paths.append(imgdir)
                     for img in l.image_list.images:

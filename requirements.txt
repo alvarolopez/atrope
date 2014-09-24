@@ -4,3 +4,4 @@ oslo.config
 PyYAML
 requests
 prettytable
+dateutils
