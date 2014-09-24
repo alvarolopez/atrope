@@ -105,11 +105,15 @@ class HepixImageList(object):
 class ImageListSource(object):
     """An image list."""
 
-    def __init__(self, name, url="", enabled=True, endorser={}, token=""):
+    def __init__(self, name, url="", enabled=True,
+                 endorser={}, token="", images=[]):
         self.name = name
 
         self.url = url
         self.token = token
+
+        # subscribed images
+        self.images = images
 
         self.enabled = enabled
 
@@ -240,7 +244,8 @@ class ImageListSource(object):
             d["error"] = self.error
         if self.contents is not None and contents:
             d["contents"] = pprint.pformat(self.d_contents)
-
+        if self.images:
+            d["subscribed images"] = self.images
         utils.print_dict(d)
 
 
@@ -315,6 +320,9 @@ class BaseImageListManager(object):
                     utils.makedirs(imgdir)
                     valid_paths.append(imgdir)
                     for img in l.image_list.images:
+                        if l.images and img.identifier not in l.images:
+                            continue
+
                         try:
                             img.download(imgdir)
                         except exception.ImageVerificationFailed:
@@ -349,7 +357,8 @@ class YamlImageListManager(BaseImageListManager):
                                 url=list_meta.get("url", ""),
                                 enabled=list_meta.get("enabled", True),
                                 endorser=list_meta.get("endorser", {}),
-                                token=list_meta.get("token", ""))
+                                token=list_meta.get("token", ""),
+                                images=list_meta.get("images", []))
             self.configured_lists[name] = l
 
     def add_image_list_source(self, image_list, force=False):
@@ -364,7 +373,8 @@ class YamlImageListManager(BaseImageListManager):
             lists[name] = {"url": image_list.url,
                            "enabled": image_list.enabled,
                            "endorser": image_list.endorser,
-                           "token": image_list.token}
+                           "token": image_list.token,
+                           "images": image_list.images}
         dump = yaml.dump(lists)
         if not dump:
             raise exception.AtropeException()
