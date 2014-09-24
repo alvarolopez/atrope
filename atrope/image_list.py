@@ -14,6 +14,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import abc
 import json
 import logging
 import os.path
@@ -30,9 +31,9 @@ from atrope import smime
 from atrope import utils
 
 opts = [
-    cfg.StrOpt('image_lists',
+    cfg.StrOpt('image_list_sources',
                default='/etc/atrope/lists.yaml',
-               help='Report definition location.'),
+               help='Where the image list sources are stored.'),
     cfg.StrOpt('cache_dir',
                default=paths.state_path_def('lists'),
                help='Where instances are stored on disk'),
@@ -197,7 +198,9 @@ class ImageList(object):
         utils.print_dict(d)
 
 
-class ImageListManager(object):
+class BaseImageListManager(object):
+    __metaclass__ = abc.ABCMeta
+
     def __init__(self):
         self.configured_lists = {}
         self.loaded_lists = None
@@ -205,16 +208,15 @@ class ImageListManager(object):
         self.cache_dir = os.path.abspath(CONF.cache_dir)
         utils.makedirs(self.cache_dir)
 
-        with open(CONF.image_lists, "rb") as f:
-            image_lists = yaml.safe_load(f)
+        self._load_sources()
 
-        for name, list_meta in image_lists.iteritems():
-            l = ImageList(name,
-                          url=list_meta.get("url", None),
-                          enabled=list_meta.get("enabled", True),
-                          endorser=list_meta.get("endorser", {}),
-                          token=list_meta.get("token", None))
-            self.configured_lists[name] = l
+    @abc.abstractmethod
+    def _load_sources(self):
+        """Load the image sources from disk."""
+
+    @abc.abstractmethod
+    def add_image_list_source(self, image):
+        """Add an image source to the configuration file."""
 
     def _fetch_and_verify(self, l):
         """
@@ -286,3 +288,40 @@ class ImageListManager(object):
 
         logging.debug("Removing %s from cache directory." % invalid_paths)
         utils.rmtree(basedir)
+
+
+class YamlImageListManager(BaseImageListManager):
+    def __init__(self):
+        super(YamlImageListManager, self).__init__()
+
+    def _load_sources(self):
+        with open(CONF.image_list_sources, "rb") as f:
+            image_lists = yaml.safe_load(f)
+
+        for name, list_meta in image_lists.iteritems():
+            l = ImageList(name,
+                          url=list_meta.get("url", None),
+                          enabled=list_meta.get("enabled", True),
+                          endorser=list_meta.get("endorser", {}),
+                          token=list_meta.get("token", None))
+            self.configured_lists[name] = l
+
+    def add_image_list_source(self, image_list, force=False):
+        if image_list.name in self.configured_lists and not force:
+            raise exception.DuplicatedImageList(id=image_list.name)
+
+        self.configured_lists[image_list.name] = image_list
+
+    def write_image_list_sources(self):
+        lists = {}
+        for name, image_list in self.configured_lists.iteritems():
+            lists[name] = {"url": image_list.url,
+                           "enabled": image_list.enabled,
+                           "endorser": image_list.endorser,
+                           "token": image_list.token}
+        dump = yaml.dump(lists)
+        if not dump:
+            raise exception.AtropeException()
+
+        with open(CONF.image_list_sources, "w") as f:
+            f.write(dump)

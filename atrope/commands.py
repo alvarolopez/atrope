@@ -26,6 +26,7 @@ CONF = cfg.CONF
 
 
 def add_command_parsers(subparsers):
+    CommandImageListAdd(subparsers)
     CommandImageListIndex(subparsers)
     CommandImageListFetch(subparsers)
     CommandImageListCache(subparsers)
@@ -49,13 +50,92 @@ class Command(object):
         raise NotImplementedError("Method must me overriden on subclass")
 
 
+class CommandImageListAdd(Command):
+    def __init__(self, parser, name="imagelist-add",
+                 cmd_help="Add a list to the configured image lists"):
+        super(CommandImageListAdd, self).__init__(parser, name, cmd_help)
+
+    def _get_values(self):
+        def get_endorser(default={}):
+            print "Enter endorser details."
+            dn = raw_input("\tEndorser DN [%s]: " %
+                           default.get("dn", "")) or default.get("dn")
+            if not dn:
+                return {}
+
+            ca = raw_input("\tEndorser CA [%s]: " %
+                           default.get("ca", "")) or default.get("ca")
+            if not ca:
+                print "CA cannot be empty, try again."
+                return get_endorser(default={"dn": dn})
+
+            return {"dn": dn, "ca": ca}
+
+        def get_str(msg, mandatory=False, default=""):
+            identifier = raw_input("%s [%s]: " % (msg, default)) or default
+            if not identifier and mandatory:
+                raise exception.MissingMandatoryFieldImageList(field=msg)
+            return identifier
+
+        def print_image(identifier, url, token, enabled, endorser):
+            d = {
+                "identifier": identifier,
+                "url": url,
+                "token": token,
+                "enabled": enabled,
+                "endorser dn": endorser.get("dn"),
+                "endorser ca": endorser.get("ca"),
+            }
+            utils.print_dict(d)
+
+        identifier = url = token = ""
+        endorser = {}
+        enabled = correct = True
+
+        while True:
+            identifier = get_str("list id", mandatory=True, default=identifier)
+            url = get_str("list URL", default=url)
+            enabled = utils.yn_question(default=enabled)
+            endorser = get_endorser(default=endorser)
+
+            token = get_str("token", default=token)
+
+            print_image(identifier, url, token, enabled, endorser)
+            msg = "Is the information above correct?"
+            correct = utils.yn_question(msg=msg)
+            if correct:
+                break
+
+        return identifier, url, enabled, endorser, token
+
+    def run(self):
+        print "Adding image list, enter the following details (Ctr+C to exit)"
+        identifier, url, enabled, endorser, token = self._get_values()
+        image_list = atrope.image_list.ImageList(identifier,
+                                                 url,
+                                                 enabled=enabled,
+                                                 endorser=endorser,
+                                                 token=token)
+
+        manager = atrope.image_list.YamlImageListManager()
+        try:
+            manager.add_image_list_source(image_list)
+            manager.write_image_list_sources()
+        except exception.DuplicatedImageList:
+            msg = "Image with id '%s' already in index, update?" % identifier
+            force = utils.yn_question(msg)
+            if force:
+                manager.add_image_list_source(image_list, force=True)
+                manager.write_image_list_sources()
+
+
 class CommandImageListIndex(Command):
     def __init__(self, parser, name="imagelist-index",
                  cmd_help="Show the configured image lists"):
         super(CommandImageListIndex, self).__init__(parser, name, cmd_help)
 
     def run(self):
-        manager = atrope.image_list.ImageListManager()
+        manager = atrope.image_list.YamlImageListManager()
         # TODO(aloga): wrap the fields, since the output is huge
         fields = ["name", "url", "enabled", "endorser"]
         objs = []
@@ -101,7 +181,7 @@ class CommandImageListCache(Command):
         super(CommandImageListCache, self).__init__(parser, name, cmd_help)
 
     def run(self):
-        manager = atrope.image_list.ImageListManager()
+        manager = atrope.image_list.YamlImageListManager()
         manager.sync_cache()
 
 

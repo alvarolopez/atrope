@@ -64,3 +64,11 @@ class ImageNotFoundOnDisk(AtropeException):
 
 class ImageVerificationFailed(AtropeException):
     msg_fmt = "Image %(id)s verification failed %(expected)s != %(obtained)s"
+
+
+class MissingMandatoryFieldImageList(AtropeException):
+    msg_fmt = "Image list is not valid, field '%(field)s' cannot be empty"
+
+
+class DuplicatedImageList(AtropeException):
+    msg_fmt = "Image list with id %(id)s exists"

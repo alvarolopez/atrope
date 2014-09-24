@@ -92,3 +92,16 @@ def get_file_checksum(path, block_size=2 ** 20):
             sha512.update(buf)
             buf = f.read(block_size)
     return sha512
+
+
+def yn_question(msg="Enabled", default=True):
+    if default:
+        default = "y"
+    yn = raw_input("%s (y/n) [%s]: " % (msg, default)).lower() or default
+    if yn == "y":
+        return True
+    elif yn == "n":
+        return False
+    else:
+        print "Please enter one of 'Y' or 'N'."
+        return yn_question()
