@@ -56,7 +56,12 @@ logger = logging.getLogger(__name__)
 
 
 class HepixImageList(object):
-#hv:imagelist
+    """
+    A Hepix Image List.
+
+    Objects of this class will hold the representation of the
+    downloaded Hepix image list.
+    """
     required_fields = (
         "dc:date:created",
         "dc:date:expires",
@@ -89,8 +94,12 @@ class HepixImageList(object):
         endorser_meta = meta.get("hv:endorser")
         self.endorser = endorser.Endorser(endorser_meta)
 
+        self.images = []
+        for img_meta in meta.get("hv:images"):
+            self.images.append(image.HepixImage(img_meta))
 
-class ImageList(object):
+
+class ImageListSource(object):
     """An image list."""
 
     def __init__(self, name, url="", enabled=True, endorser={}, token=""):
@@ -102,15 +111,15 @@ class ImageList(object):
         self.enabled = enabled
 
         self.endorser = endorser
+
+        self.image_list = None
+
         self.signers = None
         self.verified = False
         self.trusted = False
         self.error = None
 
         self.contents = None
-        self.d_contents = {}
-
-        self.images = []
 
     def _set_error(func):
         def decorated(self):
@@ -126,20 +135,12 @@ class ImageList(object):
         if self.enabled and self.url:
             self.contents = self._fetch()
             self.verified, self.signers, raw_list = self._verify()
-            # FIXME(aloga): We should check that the JSON is valid, and that
-            # load the data into the object.
             try:
-                self.d_contents = json.loads(raw_list)
+                list_as_dict = json.loads(raw_list)
             except ValueError:
                 raise exception.InvalidImageList(reason="Invalid JSON.")
 
-            print "*"*90
-            HepixImageList(self.d_contents)
-            print "*"*90
-
-            img_list = self.d_contents.get("hv:imagelist", {})
-            for img in img_list.get("hv:images"):
-                self.images.append(image.HepixImage(img))
+            self.image_list = HepixImageList(list_as_dict)
 
             self.trusted = self._check_endorser()
 
@@ -193,26 +194,18 @@ class ImageList(object):
         :returns: True of False if endorsers are trusted or not.
         """
 
-        # FIXME(aloga): This should be in its own class
-        list_endorser = self.d_contents.get("hv:imagelist", {})
-        list_endorser = list_endorser.get("hv:endorser", {})
-        list_endorser = list_endorser.get("hv:x509", {})
-        if not all(i in list_endorser for i in ("hv:ca", "hv:dn")):
-            msg = "List '%s' does not contain a valid endorser" % self.name
-            logging.error(msg)
-            self.error = msg
-            return False
+        list_endorser = self.image_list.endorser
 
-        if self.endorser["dn"] != list_endorser["hv:dn"]:
+        if self.endorser["dn"] != list_endorser.dn:
             msg = ("List '%s' endorser is not trusted, DN mismatch %s != %s" %
-                   (self.name, self.endorser["dn"], list_endorser["hv:dn"]))
+                   (self.name, self.endorser["dn"], list_endorser.dn))
             logging.error(msg)
             self.error = msg
             return False
 
-        if self.endorser["ca"] != list_endorser["hv:ca"]:
+        if self.endorser["ca"] != list_endorser.ca:
             msg = ("List '%s' endorser CA is invalid %s != %s" %
-                   (self.name, self.endorser["ca"], list_endorser["hv:ca"]))
+                   (self.name, self.endorser["ca"], list_endorser.ca))
             logging.error(msg)
             self.error = msg
             return False
@@ -223,9 +216,8 @@ class ImageList(object):
             "name": self.name,
             "url": self.url,
             "enabled": self.enabled,
-            # FIXME(aloga): objectify endorser
-            "endorser_dn": self.endorser.get("dn", None),
-            "endorser_ca": self.endorser.get("ca", None),
+            "endorser dn": self.endorser.get("dn", None),
+            "endorser ca": self.endorser.get("ca", None),
         }
         d["verified"] = self.verified
         d["trusted"] = self.trusted
@@ -308,7 +300,7 @@ class BaseImageListManager(object):
                 if l.trusted and l.verified:
                     utils.makedirs(imgdir)
                     valid_paths.append(imgdir)
-                    for img in l.images:
+                    for img in l.image_list.images:
                         try:
                             img.download(imgdir)
                         except exception.ImageVerificationFailed:
@@ -339,11 +331,11 @@ class YamlImageListManager(BaseImageListManager):
             image_lists = yaml.safe_load(f)
 
         for name, list_meta in image_lists.iteritems():
-            l = ImageList(name,
-                          url=list_meta.get("url", ""),
-                          enabled=list_meta.get("enabled", True),
-                          endorser=list_meta.get("endorser", {}),
-                          token=list_meta.get("token", ""))
+            l = ImageListSource(name,
+                                url=list_meta.get("url", ""),
+                                enabled=list_meta.get("enabled", True),
+                                endorser=list_meta.get("endorser", {}),
+                                token=list_meta.get("token", ""))
             self.configured_lists[name] = l
 
     def add_image_list_source(self, image_list, force=False):
