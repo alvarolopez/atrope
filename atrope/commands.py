@@ -17,7 +17,7 @@
 import sys
 
 from atrope import exception
-import atrope.image_list
+import atrope.image_list.manager
 from atrope import utils
 
 from oslo.config import cfg
@@ -30,6 +30,7 @@ def add_command_parsers(subparsers):
     CommandImageListIndex(subparsers)
     CommandImageListFetch(subparsers)
     CommandImageListCache(subparsers)
+    CommandDispatch(subparsers)
 
 command_opt = cfg.SubCommandOpt('command',
                                 title='Commands',
@@ -276,6 +277,17 @@ class CommandImageListCache(Command):
     def run(self):
         manager = atrope.image_list.manager.YamlImageListManager()
         manager.sync_cache()
+
+
+class CommandDispatch(Command):
+    def __init__(self, parser, name="dispatch",
+                 cmd_help="Dispatch (help TBD)."):
+        super(CommandDispatch, self).__init__(parser, name, cmd_help)
+
+    def run(self):
+        manager = atrope.image_list.manager.YamlImageListManager()
+        manager.sync_cache()
+        manager.dispatch()
 
 
 class CommandManager(object):

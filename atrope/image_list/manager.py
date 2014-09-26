@@ -21,6 +21,7 @@ from oslo.config import cfg
 import yaml
 
 from atrope import cache
+import atrope.dispatcher.manager
 from atrope import exception
 import atrope.image_list.source
 
@@ -41,11 +42,18 @@ logger = logging.getLogger(__name__)
 class BaseImageListManager(object):
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self):
+    def __init__(self, dispatcher=None):
         self.cache_manager = cache.CacheManager()
+        self._dispatcher = None
 
         self.lists = {}
         self._load_sources()
+
+    @property
+    def dispatcher(self):
+        if self._dispatcher is None:
+            self._dispatcher = atrope.dispatcher.manager.DispatcherManager()
+        return self._dispatcher
 
     @abc.abstractmethod
     def _load_sources(self):
@@ -97,8 +105,7 @@ class BaseImageListManager(object):
 
     def dispatch(self):
         for l in self.lists.values():
-            for i in l.get_subscribed_images():
-                print i
+            self.dispatcher.dispatch_list(l)
 
 
 class YamlImageListManager(BaseImageListManager):
