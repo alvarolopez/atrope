@@ -184,13 +184,15 @@ class CommandImageListAdd(Command):
 
     def add_non_interactive(self, identifier, url, token,
                             enabled, endorser, force):
-        image_list = atrope.image_list.ImageListSource(identifier,
-                                                       url,
-                                                       enabled=enabled,
-                                                       endorser=endorser,
-                                                       token=token)
+        image_list = atrope.image_list.source.ImageListSource(
+            identifier,
+            url,
+            enabled=enabled,
+            endorser=endorser,
+            token=token
+        )
 
-        manager = atrope.image_list.YamlImageListManager()
+        manager = atrope.image_list.manager.YamlImageListManager()
         manager.add_image_list_source(image_list, force=force)
         manager.write_image_list_sources()
 
@@ -200,13 +202,15 @@ class CommandImageListAdd(Command):
                                                                      token,
                                                                      enabled,
                                                                      endorser)
-        image_list = atrope.image_list.ImageListSource(identifier,
-                                                       url,
-                                                       enabled=enabled,
-                                                       endorser=endorser,
-                                                       token=token)
+        image_list = atrope.image_list.source.ImageListSource(
+            identifier,
+            url,
+            enabled=enabled,
+            endorser=endorser,
+            token=token
+        )
 
-        manager = atrope.image_list.YamlImageListManager()
+        manager = atrope.image_list.manager.YamlImageListManager()
         try:
             manager.add_image_list_source(image_list, force=force)
             manager.write_image_list_sources()
@@ -224,7 +228,7 @@ class CommandImageListIndex(Command):
         super(CommandImageListIndex, self).__init__(parser, name, cmd_help)
 
     def run(self):
-        manager = atrope.image_list.YamlImageListManager()
+        manager = atrope.image_list.manager.YamlImageListManager()
         # TODO(aloga): wrap the fields, since the output is huge
         fields = ["name", "url", "enabled", "endorser"]
         objs = []
@@ -254,7 +258,7 @@ class CommandImageListFetch(Command):
                                  help="Image list to fetch.")
 
     def run(self):
-        manager = atrope.image_list.YamlImageListManager()
+        manager = atrope.image_list.manager.YamlImageListManager()
         if CONF.command.list is not None:
             lists = [manager.fetch_list(CONF.command.list)]
         else:
@@ -270,7 +274,7 @@ class CommandImageListCache(Command):
         super(CommandImageListCache, self).__init__(parser, name, cmd_help)
 
     def run(self):
-        manager = atrope.image_list.YamlImageListManager()
+        manager = atrope.image_list.manager.YamlImageListManager()
         manager.sync_cache()
 
 
