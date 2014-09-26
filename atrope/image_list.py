@@ -43,15 +43,8 @@ opts = [
                help='Where instances are stored on disk'),
 ]
 
-cli_opts = [
-    cfg.StrOpt('index',
-               help="Show the configured image lists",
-               positional=True),
-]
-
 CONF = cfg.CONF
 CONF.register_opts(opts)
-CONF.register_cli_opts(cli_opts, group='imagelist')
 
 # FIXME(aloga): this should be configurable
 logging.basicConfig(level=logging.DEBUG)
