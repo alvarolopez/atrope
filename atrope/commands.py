@@ -29,7 +29,7 @@ def add_command_parsers(subparsers):
     CommandImageListAdd(subparsers)
     CommandImageListIndex(subparsers)
     CommandImageListFetch(subparsers)
-#    CommandImageListCache(subparsers)
+    CommandImageListCache(subparsers)
 
 command_opt = cfg.SubCommandOpt('command',
                                 title='Commands',
@@ -268,14 +268,14 @@ class CommandImageListFetch(Command):
             l.print_list(contents=CONF.command.contents)
 
 
-#class CommandImageListCache(Command):
-#    def __init__(self, parser, name="cache-sync",
-#                 cmd_help="Sync cache directory."):
-#        super(CommandImageListCache, self).__init__(parser, name, cmd_help)
-#
-#    def run(self):
-#        manager = atrope.image_list.manager.YamlImageListManager()
-#        manager.sync_cache()
+class CommandImageListCache(Command):
+    def __init__(self, parser, name="cache-sync",
+                 cmd_help="Sync cache directory."):
+        super(CommandImageListCache, self).__init__(parser, name, cmd_help)
+
+    def run(self):
+        manager = atrope.image_list.manager.YamlImageListManager()
+        manager.sync_cache()
 
 
 class CommandManager(object):

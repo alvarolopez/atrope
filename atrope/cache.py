@@ -32,29 +32,28 @@ opts = [
 CONF = cfg.CONF
 CONF.register_opts(opts, group="cache")
 
+
 class CacheManager(object):
     def __init__(self):
-        self.cache_dir = os.path.abspath(CONF.cache.path)
-        utils.makedirs(self.cache_dir)
+        self.path = os.path.abspath(CONF.cache.path)
+        utils.makedirs(self.path)
 
-    def sync(self):
-        self.load_lists()
+    def sync(self, lists):
 
-        valid_paths = [self.cache_dir]
+        valid_paths = [self.path]
         invalid_paths = []
 
-        for l in self.loaded_lists:
+        for l in lists.values():
             if l.enabled:
-                basedir = os.path.join(self.cache_dir, l.name)
+                basedir = os.path.join(self.path, l.name)
                 valid_paths.append(basedir)
-                imgdir = os.path.join(self.cache_dir, l.name, 'images')
+                imgdir = os.path.join(self.path, l.name, 'images')
                 if l.trusted and l.verified and not l.expired:
                     utils.makedirs(imgdir)
                     valid_paths.append(imgdir)
                     for img in l.image_list.images:
-                        if l.images and img.identifier not in l.images:
+                        if l.subscribed_images and img.identifier not in l.subscribed_images:
                             continue
-
                         try:
                             img.download(imgdir)
                         except exception.ImageVerificationFailed:
@@ -64,7 +63,7 @@ class CacheManager(object):
                         else:
                             valid_paths.append(img.location)
 
-        for root, dirs, files in os.walk(self.cache_dir):
+        for root, dirs, files in os.walk(self.path):
             if root not in valid_paths:
                 invalid_paths.append(root)
             for i in files + dirs:

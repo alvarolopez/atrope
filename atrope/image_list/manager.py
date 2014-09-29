@@ -20,6 +20,7 @@ import logging
 from oslo.config import cfg
 import yaml
 
+from atrope import cache
 from atrope import exception
 import atrope.image_list.source
 
@@ -41,8 +42,9 @@ class BaseImageListManager(object):
     __metaclass__ = abc.ABCMeta
 
     def __init__(self):
-        self.lists = {}
+        self.cache_manager = cache.CacheManager()
 
+        self.lists = {}
         self._load_sources()
 
     @abc.abstractmethod
@@ -88,6 +90,10 @@ class BaseImageListManager(object):
             all_lists.append(l)
 
         return all_lists
+
+    def sync_cache(self):
+        self.fetch_lists()
+        self.cache_manager.sync(self.lists)
 
 
 class YamlImageListManager(BaseImageListManager):
