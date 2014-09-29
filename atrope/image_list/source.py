@@ -36,14 +36,14 @@ class ImageListSource(object):
     """An image list."""
 
     def __init__(self, name, url="", enabled=True,
-                 endorser={}, token="", images=[]):
+                 endorser={}, token="", subscribed_images=[]):
         self.name = name
 
         self.url = url
         self.token = token
 
         # subscribed images
-        self.images = images
+        self.subscribed_images = subscribed_images
 
         self.enabled = enabled
 
@@ -159,6 +159,15 @@ class ImageListSource(object):
             return True
         return False
 
+    def get_images(self):
+        if not self.enabled:
+            return []
+
+        if self.image_list is None:
+            raise exception.ImageListNotFetched(id=self.name)
+
+        return self.image_list.get_images()
+
     def print_list(self, contents=False):
         d = {
             "name": self.name,
@@ -175,6 +184,10 @@ class ImageListSource(object):
             d["error"] = self.error
         if self.contents is not None and contents:
             d["contents"] = pprint.pformat(self.d_contents)
-        if self.images:
-            d["subscribed images"] = self.images
+        images = [str(img.identifier) for img in self.get_images()]
+        if images:
+            d["images"] = images
+        subscribed = self.subscribed_images or images
+        d["images (subscribed)"] = subscribed
+
         utils.print_dict(d)

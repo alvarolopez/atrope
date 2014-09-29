@@ -72,3 +72,7 @@ class MissingMandatoryFieldImageList(AtropeException):
 
 class DuplicatedImageList(AtropeException):
     msg_fmt = "Image list with id %(id)s exists"
+
+
+class ImageListNotFetched(AtropeException):
+    msg_fmt = "Image list %(id)s has not been fetched"

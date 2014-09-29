@@ -64,3 +64,6 @@ class HepixImageList(object):
         self.images = []
         for img_meta in meta.get("hv:images"):
             self.images.append(image.HepixImage(img_meta))
+
+    def get_images(self):
+        return self.images
