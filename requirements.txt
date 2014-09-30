@@ -1,6 +1,9 @@
 M2Crypto
 pbr>=0.6,!=0.7,<1.0
+
 oslo.config
+-e git+https://github.com/openstack/oslo.log#egg=oslo.log
+
 PyYAML
 requests
 prettytable

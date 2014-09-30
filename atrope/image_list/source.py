@@ -16,10 +16,10 @@
 
 import datetime
 import json
-import logging
 import pprint
 
 import dateutil
+from oslo.log import log
 import requests
 
 from atrope import exception
@@ -27,9 +27,7 @@ import atrope.image_list.hepix
 from atrope import smime
 from atrope import utils
 
-# FIXME(aloga): this should be configurable
-logging.basicConfig(level=logging.DEBUG)
-logger = logging.getLogger(__name__)
+LOG = log.getLogger(__name__)
 
 
 class ImageListSource(object):
@@ -139,14 +137,14 @@ class ImageListSource(object):
         if self.endorser["dn"] != list_endorser.dn:
             msg = ("List '%s' endorser is not trusted, DN mismatch %s != %s" %
                    (self.name, self.endorser["dn"], list_endorser.dn))
-            logging.error(msg)
+            LOG.error(msg)
             self.error = msg
             return False
 
         if self.endorser["ca"] != list_endorser.ca:
             msg = ("List '%s' endorser CA is invalid %s != %s" %
                    (self.name, self.endorser["ca"], list_endorser.ca))
-            logging.error(msg)
+            LOG.error(msg)
             self.error = msg
             return False
         return True
@@ -154,8 +152,8 @@ class ImageListSource(object):
     def _check_expiry(self):
         now = datetime.datetime.now(dateutil.tz.tzlocal())
         if self.image_list.expires < now:
-            logging.info("List '%s' expired on '%s'" %
-                         (self.name, self.image_list.expires))
+            LOG.info("List '%s' expired on '%s'" %
+                     (self.name, self.image_list.expires))
             return True
         return False
 

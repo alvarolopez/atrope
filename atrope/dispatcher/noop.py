@@ -12,13 +12,11 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import logging
+from oslo.log import log
 
 from atrope.dispatcher import base
 
-# FIXME(aloga): this should be configurable
-logging.basicConfig(level=logging.DEBUG)
-logger = logging.getLogger(__name__)
+LOG = log.getLogger(__name__)
 
 
 class Dispatcher(base.BaseDispatcher):
@@ -30,4 +28,4 @@ class Dispatcher(base.BaseDispatcher):
 
         In practise I do nothing, since I am the NOOP dispatcher.
         """
-        logging.debug("Dispatching image (noop) %s" % image)
+        LOG.debug("Dispatching image (noop) %s" % image)

@@ -12,8 +12,6 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import logging
-
 from oslo.config import cfg
 
 from atrope import importutils
@@ -29,10 +27,6 @@ CONF = cfg.CONF
 CONF.register_opts(opts)
 
 DISPATCHER_NAMESPACE = 'atrope.dispatcher'
-
-# FIXME(aloga): this should be configurable
-logging.basicConfig(level=logging.DEBUG)
-logger = logging.getLogger(__name__)
 
 
 class DispatcherManager(object):

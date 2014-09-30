@@ -15,6 +15,7 @@
 import sys
 
 from oslo.config import cfg
+from oslo.log import log
 
 import atrope.commands
 import atrope.config
@@ -24,6 +25,7 @@ CONF = cfg.CONF
 
 def main():
     atrope.config.parse_args(sys.argv)
+    log.setup(cfg.CONF, 'atrope')
     atrope.commands.CommandManager().execute()
 
 

@@ -14,11 +14,11 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import logging
 import sys
 
-logging.basicConfig(level=logging.DEBUG)
-logger = logging.getLogger(__name__)
+from oslo.log import log
+
+LOG = log.getLogger(__name__)
 
 
 class AtropeException(Exception):
@@ -34,9 +34,9 @@ class AtropeException(Exception):
                 exc_info = sys.exc_info()
                 # kwargs doesn't match a variable in the message
                 # log the issue and the kwargs
-                logger.exception('Exception in string format operation')
+                LOG.exception('Exception in string format operation')
                 for name, value in kwargs.iteritems():
-                    logger.error("%s: %s" % (name, value))
+                    LOG.error("%s: %s" % (name, value))
                 raise exc_info[0], exc_info[1], exc_info[2]
 
         super(AtropeException, self).__init__(message)

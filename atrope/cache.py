@@ -14,10 +14,10 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import logging
 import os.path
 
 from oslo.config import cfg
+from oslo.log import log
 
 from atrope import exception
 from atrope import paths
@@ -32,6 +32,7 @@ opts = [
 CONF = cfg.CONF
 CONF.register_opts(opts, group="cache")
 
+LOG = log.getLogger(__name__)
 
 class CacheManager(object):
     def __init__(self):
@@ -69,7 +70,7 @@ class CacheManager(object):
                 if i not in valid_paths:
                     invalid_paths.append(i)
 
-        logging.debug("Marked %s as invalid cache files/dirs." % invalid_paths)
+        LOG.debug("Marked %s as invalid cache files/dirs." % invalid_paths)
         for i in invalid_paths:
-            logging.debug("Removing %s from cache directory." % i)
+            LOG.debug("Removing %s from cache directory." % i)
             utils.rm(i)

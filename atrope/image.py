@@ -15,17 +15,15 @@
 # under the License.
 
 import abc
-import logging
 import os.path
 
+from oslo.log import log
 import requests
 
 from atrope import exception
 from atrope import utils
 
-# FIXME(aloga): this should be configurable
-logging.basicConfig(level=logging.DEBUG)
-logger = logging.getLogger(__name__)
+LOG = log.getLogger(__name__)
 
 
 class BaseImage(object):
@@ -101,8 +99,8 @@ class HepixImage(BaseImage):
             setattr(self, attr, value)
 
     def _download(self, location):
-        logging.debug("Downloading image '%s' into '%s'" %
-                      (self.identifier, location))
+        LOG.debug("Downloading image '%s' into '%s'" %
+                  (self.identifier, location))
         with open(location, 'wb') as f:
             response = requests.get(self.uri, stream=True)
 
@@ -117,11 +115,11 @@ class HepixImage(BaseImage):
         try:
             self.verify_checksum(location=location)
         except exception.ImageVerificationFailed as e:
-            logging.error(e)
+            LOG.error(e)
             raise
         else:
-            logging.debug("Image '%s' downloaded into '%s'" %
-                          (self.identifier, location))
+            LOG.debug("Image '%s' downloaded into '%s'" %
+                      (self.identifier, location))
 
     def download(self, basedir):
         # The image has been already downloaded in this execution.
@@ -137,11 +135,11 @@ class HepixImage(BaseImage):
             try:
                 self.verify_checksum(location=location)
             except exception.ImageVerificationFailed:
-                logging.info("Image '%s' found in '%s' is not valid, "
-                             "downloading again" % (self.identifier, location))
+                LOG.info("Image '%s' found in '%s' is not valid, "
+                         "downloading again" % (self.identifier, location))
                 self._download(location)
             else:
-                logging.debug("Image '%s' already downloaded into '%s'" %
-                              (self.identifier, location))
+                LOG.debug("Image '%s' already downloaded into '%s'" %
+                          (self.identifier, location))
 
         self.location = location

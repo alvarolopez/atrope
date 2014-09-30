@@ -15,9 +15,9 @@
 # under the License.
 
 import abc
-import logging
 
 from oslo.config import cfg
+from oslo.log import log
 import yaml
 
 from atrope import cache
@@ -34,9 +34,7 @@ opts = [
 CONF = cfg.CONF
 CONF.register_opts(opts)
 
-# FIXME(aloga): this should be configurable
-logging.basicConfig(level=logging.DEBUG)
-logger = logging.getLogger(__name__)
+LOG = log.getLogger(__name__)
 
 
 class BaseImageListManager(object):
@@ -77,10 +75,10 @@ class BaseImageListManager(object):
         try:
             l.fetch()
         except exception.AtropeException as e:
-            logging.error("Error loading list '%s', reason: %s" %
-                          (l.name, e.message))
-            logging.debug("Exception while downloading list '%s'" % l.name,
-                          exc_info=e)
+            LOG.error("Error loading list '%s', reason: %s" %
+                      (l.name, e.message))
+            LOG.debug("Exception while downloading list '%s'" % l.name,
+                      exc_info=e)
         return l
 
     def fetch_list(self, image_list):
