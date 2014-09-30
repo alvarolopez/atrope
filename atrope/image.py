@@ -31,11 +31,12 @@ logger = logging.getLogger(__name__)
 class BaseImage(object):
     __metaclass__ = abc.ABCMeta
 
-    uri = sha512 = identifier = location = None
-
     @abc.abstractmethod
     def __init__(self, image_info):
-        pass
+        self.uri = None
+        self.sha512 = None
+        self.identifier = None
+        self.location = None
 
     @abc.abstractmethod
     def download(self, dest):
