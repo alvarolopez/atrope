@@ -95,6 +95,11 @@ class BaseImageListManager(object):
         self.fetch_lists()
         self.cache_manager.sync(self.lists)
 
+    def dispatch(self):
+        for l in self.lists.values():
+            for i in l.get_subscribed_images():
+                print i
+
 
 class YamlImageListManager(BaseImageListManager):
     def __init__(self):

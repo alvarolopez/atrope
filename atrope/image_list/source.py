@@ -159,6 +159,16 @@ class ImageListSource(object):
             return True
         return False
 
+    def get_subscribed_images(self):
+        if not self.enabled:
+            return []
+
+        if not self.subscribed_images:
+            return self.image_list.get_images()
+        else:
+            return [img for img in self.image_list.get_images()
+                    if img.identifier in self.subscribed_images]
+
     def get_images(self):
         if not self.enabled:
             return []

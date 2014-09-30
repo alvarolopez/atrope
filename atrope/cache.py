@@ -51,9 +51,7 @@ class CacheManager(object):
                 if l.trusted and l.verified and not l.expired:
                     utils.makedirs(imgdir)
                     valid_paths.append(imgdir)
-                    for img in l.image_list.images:
-                        if l.subscribed_images and img.identifier not in l.subscribed_images:
-                            continue
+                    for img in l.get_subscribed_images():
                         try:
                             img.download(imgdir)
                         except exception.ImageVerificationFailed:
