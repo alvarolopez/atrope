@@ -8,3 +8,4 @@ PyYAML
 requests
 prettytable
 dateutils
+python-glanceclient

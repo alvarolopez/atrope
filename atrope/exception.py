@@ -76,3 +76,21 @@ class DuplicatedImageList(AtropeException):
 
 class ImageListNotFetched(AtropeException):
     msg_fmt = "Image list %(id)s has not been fetched"
+
+
+class GlanceError(AtropeException):
+    msg_fmt = "An unknown Glance exception occurred."
+
+
+class GlanceMissingConfiguration(GlanceError):
+    msg_fmt = "Glance catalog requires one of %(flags)s flags"
+
+
+class DuplicatedImage(AtropeException):
+    msg_fmt = "Found several images with same sha512 %(images)s"
+
+
+class ImageListSpecIsBorken(AtropeException):
+    # NOTE(aloga): Borken in the class name is intentional
+    msg_fmt = ("The image list spec is broken and I am not able to "
+               "guess what the image format is.")
