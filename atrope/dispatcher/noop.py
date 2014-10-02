@@ -22,6 +22,9 @@ LOG = log.getLogger(__name__)
 class Dispatcher(base.BaseDispatcher):
     """This dummy dispatcher does nothing."""
 
+    def sync(self, image_list):
+        """I do nothing."""
+
     def dispatch(self, image, **kwargs):
         """
         In theory I should do something with the image.

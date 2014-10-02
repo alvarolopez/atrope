@@ -21,5 +21,13 @@ class BaseDispatcher(object):
     __metaclass__ = abc.ABCMeta
 
     @abc.abstractmethod
+    def sync(self, image_list):
+        """Sync the image_list images.
+
+        This method should sync the image list's images with those that have
+        been dispatched in the past.
+        """
+
+    @abc.abstractmethod
     def dispatch(self, image, **kwargs):
         """Save an image with its metadata."""

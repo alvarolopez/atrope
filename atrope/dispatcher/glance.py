@@ -293,6 +293,9 @@ class Dispatcher(base.BaseDispatcher):
                       image.identifier,
                       glance_image.id)
 
+    def sync(self, image_list):
+        raise NotImplementedError("not implemented yet")
+
     def _upload(self, id, image):
         fd = open(image.location, "rb")
         self.client.images.upload(id, fd)
