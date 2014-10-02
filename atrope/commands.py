@@ -284,10 +284,18 @@ class CommandDispatch(Command):
                  cmd_help="Dispatch (help TBD)."):
         super(CommandDispatch, self).__init__(parser, name, cmd_help)
 
+        self.parser.add_argument("-n",
+                                 "--no-sync",
+                                 dest="sync",
+                                 default=True,
+                                 action="store_false",
+                                 help="Do not sync image list with "
+                                      "dispatched data")
+
     def run(self):
         manager = atrope.image_list.manager.YamlImageListManager()
         manager.sync_cache()
-        manager.dispatch()
+        manager.dispatch(CONF.command.sync)
 
 
 class CommandManager(object):

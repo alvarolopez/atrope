@@ -44,6 +44,8 @@ class DispatcherManager(object):
         that was not set for dispatch.
         """
         self.dispatch_list(image_list, **kwargs)
+        for dispatcher in self.dispatchers:
+            dispatcher.sync(image_list)
 
     def dispatch_list(self, image_list, **kwargs):
         """Dispatch a list of images to each of the dispatchers.

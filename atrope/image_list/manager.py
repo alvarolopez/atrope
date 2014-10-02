@@ -101,9 +101,14 @@ class BaseImageListManager(object):
         self.fetch_lists()
         self.cache_manager.sync(self.lists)
 
-    def dispatch(self):
+    def dispatch(self, sync):
+        if sync:
+            fn = self.dispatcher.dispatch_list_and_sync
+        else:
+            fn = self.dispatcher.dispatch_list
+
         for l in self.lists.values():
-            self.dispatcher.dispatch_list(l)
+            fn(l)
 
 
 class YamlImageListManager(BaseImageListManager):
