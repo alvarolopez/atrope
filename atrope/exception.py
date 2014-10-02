@@ -94,3 +94,7 @@ class ImageListSpecIsBorken(AtropeException):
     # NOTE(aloga): Borken in the class name is intentional
     msg_fmt = ("The image list spec is broken and I am not able to "
                "guess what the image format is.")
+
+
+class MetadataOverwriteNotSupported(AtropeException):
+    msg_fmt = "Setting %(key)s property is not supported."

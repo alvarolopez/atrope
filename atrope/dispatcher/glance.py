@@ -201,7 +201,6 @@ class Dispatcher(base.BaseDispatcher):
         ks_session.auth = auth
         return ks_session
 
-
     def _get_token_and_endpoint(self):
         kwargs = {
             "username": CONF.glance.username,
@@ -218,8 +217,11 @@ class Dispatcher(base.BaseDispatcher):
                 endpoint_type='public')
         return ks_session.get_token(), endpoint
 
-    def dispatch(self, image):
-        """Upload an image to the glance service."""
+    def dispatch(self, image, **kwargs):
+        """Upload an image to the glance service.
+
+        If metadata is provided in the kwargs it will be associated with
+        the image."""
         LOG.debug("Glance dispatching %s" % image)
 
         # TODO(aloga): missing hypervisor type, need list spec first
@@ -237,6 +239,11 @@ class Dispatcher(base.BaseDispatcher):
             "appdb_id": image.identifier,
             "sha512": image.sha512,
         }
+
+        for k, v in kwargs.iteritems():
+            if k in metadata:
+                raise exception.MetadataOverwriteNotSupported(key=k)
+            metadata[k] = v
 
         # Format is not defined in the spec. What is format? Maybe it is the
         # container format? Or is it the image format? Try to do some ugly

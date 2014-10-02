@@ -21,5 +21,5 @@ class BaseDispatcher(object):
     __metaclass__ = abc.ABCMeta
 
     @abc.abstractmethod
-    def dispatch(self, image):
+    def dispatch(self, image, **kwargs):
         """Save an image with its metadata."""
