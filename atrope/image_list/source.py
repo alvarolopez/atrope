@@ -74,6 +74,7 @@ class ImageListSource(object):
             try:
                 list_as_dict = json.loads(raw_list)
             except ValueError:
+                LOG.error("Invalid JSON for image list %s", self.name)
                 raise exception.InvalidImageList(reason="Invalid JSON.")
 
             image_list = atrope.image_list.hepix.HepixImageList(list_as_dict)
@@ -160,6 +161,9 @@ class ImageListSource(object):
     def get_subscribed_images(self):
         if not self.enabled:
             return []
+
+        if self.image_list is None:
+            raise exception.ImageListNotFetched(id=self.name)
 
         if not self.subscribed_images:
             return self.image_list.get_images()
