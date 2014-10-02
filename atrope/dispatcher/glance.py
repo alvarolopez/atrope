@@ -27,6 +27,10 @@ from atrope.dispatcher import base
 from atrope import exception
 
 opts = [
+    cfg.StrOpt('prefix',
+               default="",
+               help="If set, the image name's will be prefixed by this "
+               "option."),
     cfg.StrOpt('username',
                default=None,
                help='Glance user name that will upload the images.'),
@@ -60,6 +64,7 @@ opts = [
 ]
 
 CONF = cfg.CONF
+CONF.import_opt("prefix", "atrope.dispatcher.base", group="dispatchers")
 CONF.register_opts(opts, group="glance")
 
 LOG = log.getLogger(__name__)
@@ -226,7 +231,7 @@ class Dispatcher(base.BaseDispatcher):
 
         # TODO(aloga): missing hypervisor type, need list spec first
         metadata = {
-            "name": image.title,
+            "name": "%s%s" % (CONF.dispatchers.prefix, image.title),
             "tags": ["atrope"],
             "architecture": image.arch,
             "disk_format": None,

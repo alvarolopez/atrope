@@ -21,10 +21,14 @@ opts = [
                     default=['noop'],
                     help='Dispatcher to process images. Can be specified '
                          'multiple times.'),
+    cfg.StrOpt('prefix',
+               default="",
+               help="If set, the image name's will be prefixed by this "
+               "option."),
 ]
 
 CONF = cfg.CONF
-CONF.register_opts(opts)
+CONF.register_opts(opts, group="dispatchers")
 
 DISPATCHER_NAMESPACE = 'atrope.dispatcher'
 
@@ -32,7 +36,7 @@ DISPATCHER_NAMESPACE = 'atrope.dispatcher'
 class DispatcherManager(object):
     def __init__(self):
         self.dispatchers = []
-        for dispatcher in CONF.dispatcher:
+        for dispatcher in CONF.dispatchers.dispatcher:
             cls_ = "%s.%s.Dispatcher" % (DISPATCHER_NAMESPACE, dispatcher)
             self.dispatchers.append(importutils.import_class(cls_)())
 
