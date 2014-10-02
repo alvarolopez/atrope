@@ -36,12 +36,31 @@ class DispatcherManager(object):
             cls_ = "%s.%s.Dispatcher" % (DISPATCHER_NAMESPACE, dispatcher)
             self.dispatchers.append(importutils.import_class(cls_)())
 
-    def dispatch_list(self, image_list):
-        """Dispatch a list of images to each of the dispatchers."""
-        for image in image_list.get_subscribed_images():
-            self.dispatch_image(image)
+    def dispatch_list_and_sync(self, image_list, **kwargs):
+        """Dispatch and sync the images list.
 
-    def dispatch_image(self, image):
+        This method will dispatch all the images associated with the image
+        list. Afterwards it will remove any image associated to that image list
+        that was not set for dispatch.
+        """
+        self.dispatch_list(image_list, **kwargs)
+
+    def dispatch_list(self, image_list, **kwargs):
+        """Dispatch a list of images to each of the dispatchers.
+
+        This command will receive an image list and will dispatch all the
+        images into the catalog.
+
+        :param image_list: image list to dispatch
+        :param **kwargs: extra metadata to be added to the image.
+        """
+
+        kwargs.setdefault("image_list", image_list.name)
+
+        for image in image_list.get_subscribed_images():
+            self.dispatch_image(image, **kwargs)
+
+    def dispatch_image(self, image, **kwargs):
         """Dispatch a single image to each of the dispatchers."""
         for dispatcher in self.dispatchers:
-            dispatcher.dispatch(image)
+            dispatcher.dispatch(image, **kwargs)
