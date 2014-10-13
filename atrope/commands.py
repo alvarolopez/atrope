@@ -89,6 +89,14 @@ class CommandImageListAdd(Command):
                                  default="",
                                  help="Access token to use")
 
+        self.parser.add_argument("-p",
+                                 "--prefix",
+                                 dest="prefix",
+                                 metavar="PREFIX",
+                                 default="",
+                                 help="If set images names will be prefixed "
+                                      "with this.")
+
         self.parser.add_argument("-f",
                                  "--force",
                                  dest="force",
@@ -110,7 +118,7 @@ class CommandImageListAdd(Command):
                            action="store_false",
                            help="Add list as disabled")
 
-    def _get_values(self, url, token, enabled, endorser):
+    def _get_values(self, url, token, prefix, enabled, endorser):
         def get_endorser(default={}):
             print "Enter endorser details."
             dn = raw_input("\tEndorser DN [%s]: " %
@@ -132,11 +140,12 @@ class CommandImageListAdd(Command):
                 raise exception.MissingMandatoryFieldImageList(field=msg)
             return identifier
 
-        def print_image(identifier, url, token, enabled, endorser):
+        def print_image(identifier, url, token, prefix, enabled, endorser):
             d = {
                 "identifier": identifier,
                 "url": url,
                 "token": token,
+                "prefix": prefix,
                 "enabled": enabled,
                 "endorser dn": endorser.get("dn"),
                 "endorser ca": endorser.get("ca"),
@@ -152,7 +161,9 @@ class CommandImageListAdd(Command):
 
             token = get_str("token", default=token)
 
-            print_image(identifier, url, token, enabled, endorser)
+            prefix = get_str("prefix", default=prefix)
+
+            print_image(identifier, url, token, prefix, enabled, endorser)
             msg = "Is the information above correct?"
             correct = utils.yn_question(msg=msg)
             if correct:
@@ -160,12 +171,13 @@ class CommandImageListAdd(Command):
             print
             print "OK, lets try again"
 
-        return identifier, url, enabled, endorser, token
+        return identifier, url, enabled, endorser, token, prefix
 
     def run(self):
         identifier = CONF.command.list_id
         url = CONF.command.url
         token = CONF.command.token
+        prefix = CONF.command.prefix
         enabled = CONF.command.enabled
         force = CONF.command.force
         endorser_dn = CONF.command.endorser_dn
@@ -178,37 +190,38 @@ class CommandImageListAdd(Command):
                 endorser = {}
 
         if identifier is None:
-            self.add_interative(url, token, enabled, endorser, force)
+            self.add_interative(url, token, prefix, enabled, endorser, force)
         else:
-            self.add_non_interactive(identifier, url, token,
-                                     enabled, endorser, force)
+            self.add_non_interactive(identifier, url, token, prefix, enabled,
+                                     endorser, force)
 
-    def add_non_interactive(self, identifier, url, token,
-                            enabled, endorser, force):
+    def add_non_interactive(self, identifier, url, token, prefix, enabled,
+                            endorser, force):
         image_list = atrope.image_list.source.ImageListSource(
             identifier,
             url,
             enabled=enabled,
             endorser=endorser,
-            token=token
+            token=token,
+            prefix=prefix
         )
 
         manager = atrope.image_list.manager.YamlImageListManager()
         manager.add_image_list_source(image_list, force=force)
         manager.write_image_list_sources()
 
-    def add_interative(self, url, token, enabled, endorser, force):
+    def add_interative(self, url, token,prefix,  enabled, endorser, force):
         print "Adding image list, enter the following details (Ctr+C to exit)"
-        identifier, url, enabled, endorser, token = self._get_values(url,
-                                                                     token,
-                                                                     enabled,
-                                                                     endorser)
+        (identifier, url, enabled,
+         endorser, token, prefix) = self._get_values(url, token, prefix,
+                                                     enabled, endorser)
         image_list = atrope.image_list.source.ImageListSource(
             identifier,
             url,
             enabled=enabled,
             endorser=endorser,
-            token=token
+            token=token,
+            prefix=prefix
         )
 
         manager = atrope.image_list.manager.YamlImageListManager()
