@@ -29,10 +29,6 @@ from atrope.dispatcher import base
 from atrope import exception
 
 opts = [
-    cfg.StrOpt('prefix',
-               default="",
-               help="If set, the image name's will be prefixed by this "
-               "option."),
     cfg.StrOpt('mapping_file',
                default='etc/voms.json',
                help='File containing the VO <-> tenant mapping for image '
