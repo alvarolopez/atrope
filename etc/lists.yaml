@@ -4,6 +4,7 @@ ttycorelinux egi:
     endorser:
         dn: '/DC=EU/DC=EGI/C=NL/O=Hosts/O=EGI.eu/CN=appdb.egi.eu'
         ca: "/DC=ORG/DC=SEE-GRID/CN=SEE-GRID CA 2013"
+    images: []
 
 vo.fedcloud.egi.eu:
     url: https://vmcaster.appdb.egi.eu/store/vo/fedcloud.egi.eu/image.list
@@ -11,9 +12,13 @@ vo.fedcloud.egi.eu:
     endorser:
         dn: '/DC=EU/DC=EGI/C=NL/O=Hosts/O=EGI.eu/CN=appdb.egi.eu'
         ca: "/DC=ORG/DC=SEE-GRID/CN=SEE-GRID CA 2013"
+    token: 17580f07-1e33-4a38-94e3-3386daced5be
+    images:
+        - 662b0e71-3e21-5f43-b6a1-cc2f51319fa7
+    prefix: "FEDCLOUD "
 
 foo:
     enabled: false
 
 bar:
-    enabled: true
+    enabled: false

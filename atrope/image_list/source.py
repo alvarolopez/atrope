@@ -14,6 +14,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import abc
 import datetime
 import json
 import pprint
@@ -30,22 +31,62 @@ from atrope import utils
 LOG = log.getLogger(__name__)
 
 
-class ImageListSource(object):
+class BaseImageListSource(object):
+    """An image list."""
+
+    __metaclass__ = abc.ABCMeta
+
+    def __init__(self, name, url="", enabled=True, subscribed_images=[], prefix=""):
+        self.name = name
+        self.url = url
+        self.enabled = enabled
+        self.prefix = prefix
+        self.subscribed_images = subscribed_images
+
+    @abc.abstractmethod
+    def fetch(self):
+        pass
+
+    def get_subscribed_images(self):
+        """Get the subscribed images from the fetched image list."""
+        if not self.enabled:
+            return []
+
+        if self.image_list is None:
+            raise exception.ImageListNotFetched(id=self.name)
+
+        if not self.subscribed_images:
+            return self.image_list.get_images()
+        else:
+            return [img for img in self.image_list.get_images()
+                    if img.identifier in self.subscribed_images]
+
+    def get_images(self):
+        """Get the images defined in the fetched image list."""
+        if not self.enabled:
+            return []
+
+        if self.image_list is None:
+            raise exception.ImageListNotFetched(id=self.name)
+
+        return self.image_list.get_images()
+
+    def print_list(self):
+        pass
+
+
+class ImageListSource(BaseImageListSource):
     """An image list."""
 
     def __init__(self, name, url="", enabled=True, endorser={}, token="",
                  subscribed_images=[], prefix=""):
-        self.name = name
 
-        self.url = url
+        super(ImageListSource, self).__init__(name,
+                                              url=url,
+                                              enabled=enabled,
+                                              subscribed_images=subscribed_images,
+                                              prefix=prefix)
         self.token = token
-
-        self.prefix = prefix
-
-        # subscribed images
-        self.subscribed_images = subscribed_images
-
-        self.enabled = enabled
 
         self.endorser = endorser
 
@@ -159,28 +200,6 @@ class ImageListSource(object):
                      (self.name, self.image_list.expires))
             return True
         return False
-
-    def get_subscribed_images(self):
-        if not self.enabled:
-            return []
-
-        if self.image_list is None:
-            raise exception.ImageListNotFetched(id=self.name)
-
-        if not self.subscribed_images:
-            return self.image_list.get_images()
-        else:
-            return [img for img in self.image_list.get_images()
-                    if img.identifier in self.subscribed_images]
-
-    def get_images(self):
-        if not self.enabled:
-            return []
-
-        if self.image_list is None:
-            raise exception.ImageListNotFetched(id=self.name)
-
-        return self.image_list.get_images()
 
     def print_list(self, contents=False):
         d = {
