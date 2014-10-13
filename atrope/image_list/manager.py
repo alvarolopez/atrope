@@ -23,7 +23,7 @@ import yaml
 from atrope import cache
 import atrope.dispatcher.manager
 from atrope import exception
-import atrope.image_list.source
+import atrope.image_list.hepix
 
 opts = [
     cfg.StrOpt('image_list_sources',
@@ -126,7 +126,7 @@ class YamlImageListManager(BaseImageListManager):
                                            errno=e.errno)
 
         for name, list_meta in image_lists.iteritems():
-            l = atrope.image_list.source.ImageListSource(
+            l = atrope.image_list.hepix.HepixImageListSource(
                 name,
                 url=list_meta.get("url", ""),
                 enabled=list_meta.get("enabled", True),
