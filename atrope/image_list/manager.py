@@ -118,8 +118,12 @@ class YamlImageListManager(BaseImageListManager):
     def _load_sources(self):
         """Load sources from YAML file."""
 
-        with open(CONF.image_list_sources, "rb") as f:
-            image_lists = yaml.safe_load(f)
+        try:
+            with open(CONF.image_list_sources, "rb") as f:
+                image_lists = yaml.safe_load(f)
+        except IOError as e:
+            raise exception.CannotOpenFile(file=CONF.image_list_sources,
+                                           errno=e.errno)
 
         for name, list_meta in image_lists.iteritems():
             l = atrope.image_list.source.ImageListSource(

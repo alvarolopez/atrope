@@ -14,6 +14,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import os
 import sys
 
 from oslo.log import log
@@ -40,6 +41,14 @@ class AtropeException(Exception):
                 raise exc_info[0], exc_info[1], exc_info[2]
 
         super(AtropeException, self).__init__(message)
+
+
+class CannotOpenFile(AtropeException):
+    msg_fmt = "Cannot open file %(file)s: %(reason)s"
+
+    def __init__(self, message=None, errno=0, **kwargs):
+        kwargs["reason"] = os.strerror(errno)
+        super(CannotOpenFile, self).__init__(message=message, **kwargs)
 
 
 class SMIMEValidationError(AtropeException):
