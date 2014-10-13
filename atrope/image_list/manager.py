@@ -152,6 +152,7 @@ class YamlImageListManager(BaseImageListManager):
                            "enabled": image_list.enabled,
                            "endorser": image_list.endorser,
                            "token": image_list.token,
+                           "prefix": image_list.prefix,
                            "images": image_list.images}
         dump = yaml.dump(lists)
         if not dump:
