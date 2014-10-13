@@ -25,7 +25,7 @@ class Dispatcher(base.BaseDispatcher):
     def sync(self, image_list):
         """I do nothing."""
 
-    def dispatch(self, image, **kwargs):
+    def dispatch(self, image, *args, **kwargs):
         """
         In theory I should do something with the image.
 

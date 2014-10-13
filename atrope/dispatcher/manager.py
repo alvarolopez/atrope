@@ -63,10 +63,16 @@ class DispatcherManager(object):
 
         kwargs.setdefault("image_list", image_list.name)
 
-        for image in image_list.get_subscribed_images():
-            self.dispatch_image(image, **kwargs)
+        is_public = False if image_list.token else True
 
-    def dispatch_image(self, image, **kwargs):
+        if image_list.image_list is not None:
+            if image_list.image_list.vo is not None:
+                kwargs["vo"] = image_list.image_list.vo
+
+        for image in image_list.get_subscribed_images():
+            self.dispatch_image(image, is_public, **kwargs)
+
+    def dispatch_image(self, image, is_public, **kwargs):
         """Dispatch a single image to each of the dispatchers."""
         for dispatcher in self.dispatchers:
-            dispatcher.dispatch(image, **kwargs)
+            dispatcher.dispatch(image, is_public, **kwargs)

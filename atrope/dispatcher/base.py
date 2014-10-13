@@ -29,5 +29,5 @@ class BaseDispatcher(object):
         """
 
     @abc.abstractmethod
-    def dispatch(self, image, **kwargs):
+    def dispatch(self, image, is_public, **kwargs):
         """Save an image with its metadata."""

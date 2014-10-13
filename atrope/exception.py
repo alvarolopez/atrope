@@ -98,3 +98,7 @@ class ImageListSpecIsBorken(AtropeException):
 
 class MetadataOverwriteNotSupported(AtropeException):
     msg_fmt = "Setting %(key)s property is not supported."
+
+
+class GlanceInvalidMappingFIle(GlanceError):
+    msg_fmt = "Cannot load %(file)s mapping file: %(reason)s."

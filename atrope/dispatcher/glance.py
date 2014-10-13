@@ -12,6 +12,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import json
 import urlparse
 
 import glanceclient
@@ -20,6 +21,7 @@ from keystoneclient.auth.identity import v3 as v3_auth
 from keystoneclient import discover
 from keystoneclient.openstack.common.apiclient import exceptions as ks_exc
 from keystoneclient import session
+from keystoneclient.v3 import client
 from oslo.config import cfg
 from oslo.log import log
 
@@ -31,6 +33,10 @@ opts = [
                default="",
                help="If set, the image name's will be prefixed by this "
                "option."),
+    cfg.StrOpt('mapping_file',
+               default='etc/voms.json',
+               help='File containing the VO <-> tenant mapping for image '
+                    'lists private to VOs'),
     cfg.StrOpt('username',
                default=None,
                help='Glance user name that will upload the images.'),
@@ -103,11 +109,21 @@ class Dispatcher(base.BaseDispatcher):
             raise exception.GlanceMissingConfiguration(flags=["endpoint",
                                                               "auth_url"])
 
+        self.ks_session = None
+        self.ks_client = None
         self.token, self.endpoint = self._get_token_and_endpoint()
 
         self.client = glanceclient.Client('2', endpoint=self.endpoint,
                                           token=self.token,
                                           insecure=CONF.glance.insecure)
+        try:
+            self.json_mapping = json.loads(
+                open(CONF.glance.mapping_file).read())
+        except ValueError:
+            raise exception.GlanceInvalidMappingFIle(
+                file=CONF.glance.mapping_file,
+                reason="Bad JSON."
+            )
 
     def _discover_auth_versions(self, session, auth_url):
         # discover the API versions the server is supporting base on the
@@ -216,13 +232,20 @@ class Dispatcher(base.BaseDispatcher):
             "auth_url": CONF.glance.auth_url,
             "insecure": CONF.glance.insecure,
         }
-        ks_session = self._get_ks_session(**kwargs)
-        endpoint = CONF.glance.endpoint or ks_session.get_endpoint(
+        if self.ks_session is None:
+            self.ks_session = self._get_ks_session(**kwargs)
+        endpoint = CONF.glance.endpoint or self.ks_session.get_endpoint(
                 service_type='image',
                 endpoint_type='public')
-        return ks_session.get_token(), endpoint
+        self.ks_client = client.Client(session=self.ks_session)
+        return self.ks_session.get_token(), endpoint
 
-    def dispatch(self, image, **kwargs):
+    def _get_vo_tenant_mapping(self, vo):
+        tenant = self.json_mapping.get(vo, {}).get("tenant", None)
+        tenants = self.ks_client.projects.list(name=tenant)
+        return tenants[0].id if tenants else None
+
+    def dispatch(self, image, is_public, **kwargs):
         """Upload an image to the glance service.
 
         If metadata is provided in the kwargs it will be associated with
@@ -238,6 +261,7 @@ class Dispatcher(base.BaseDispatcher):
             "container_format": None,
             "os_distro": image.osname.lower(),
             "os_version": image.osversion,
+            "visibility": "public" if is_public else "private",
             # AppDB properties
             "vmcatcher_event_dc_description": image.description,
             "vmcatcher_event_ad_mpuri": image.mpuri,
@@ -297,6 +321,17 @@ class Dispatcher(base.BaseDispatcher):
             LOG.debug("Image %s is %s in glance.",
                       image.identifier,
                       glance_image.id)
+
+        if metadata.get("vo", None) is not None:
+            tenant = self._get_vo_tenant_mapping(metadata["vo"])
+            if tenant is not None:
+                self.client.image_members.create(glance_image.id, tenant)
+                LOG.info("Image %s associated with VO %s, tenant %s" %
+                         (image.identifier, metadata["vo"], tenant))
+            else:
+                LOG.warning("Image %s is associated with VO %s but no "
+                            "mapping found!" % (image.identifier,
+                                                metadata["vo"]))
 
     def sync(self, image_list):
         """Sunc image list with dispached images."""
