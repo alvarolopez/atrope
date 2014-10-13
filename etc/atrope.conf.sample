@@ -1,0 +1,86 @@
+[DEFAULT]
+
+
+#
+# Options defined in atrope.smime
+#
+
+# Where to find CA certificates to verify against. (string
+# value)
+#ca_path=/etc/grid-security/certificates/
+
+
+#
+# Options defined in atrope.image_list.manager
+#
+
+# Where the image list sources are stored. (string value)
+#image_list_sources=/etc/atrope/lists.yaml
+
+
+[cache]
+
+#
+# Options defined in atrope.cache
+#
+
+# Where instances are stored on disk (string value)
+#path=$state_path/lists
+
+
+[dispatchers]
+
+#
+# Options defined in atrope.dispatcher.manager
+#
+
+# Dispatcher to process images. Can be specified multiple
+# times. (multi valued)
+#dispatcher=noop
+
+# If set, the image name's will be prefixed by this option.
+# (string value)
+#prefix=
+
+
+[glance]
+
+#
+# Options defined in atrope.dispatcher.glance
+#
+
+# File containing the VO <-> tenant mapping for image lists
+# private to VOs (string value)
+#mapping_file=etc/voms.json
+
+# Glance user name that will upload the images. (string value)
+#username=<None>
+
+# Glance user UUID that will upload the images. (string value)
+#user_id=<None>
+
+# Password for the glance user. (string value)
+#password=<None>
+
+# Tenant name for the user. (string value)
+#tenant_name=<None>
+
+# Tenant UUID for the user. (string value)
+#tenant_id=<None>
+
+# URL of the identity service to authenticate with. (string
+# value)
+#auth_url=<None>
+
+# URL of the image service to upload images to. If this option
+# is not specified, the image service willbe obtained from the
+# identity service. (string value)
+#endpoint=<None>
+
+# Explicitly allow us to perform "insecure SSL" (https)
+# requests. The server's certificate will not be verified
+# against any certificate authorities. This option should be
+# used with caution. (boolean value)
+#insecure=false
+
+
