@@ -128,7 +128,8 @@ class YamlImageListManager(BaseImageListManager):
                 enabled=list_meta.get("enabled", True),
                 endorser=list_meta.get("endorser", {}),
                 token=list_meta.get("token", ""),
-                subscribed_images=list_meta.get("images", [])
+                subscribed_images=list_meta.get("images", []),
+                prefix=list_meta.get("prefix", "")
             )
             self.lists[name] = l
 

@@ -33,12 +33,14 @@ LOG = log.getLogger(__name__)
 class ImageListSource(object):
     """An image list."""
 
-    def __init__(self, name, url="", enabled=True,
-                 endorser={}, token="", subscribed_images=[]):
+    def __init__(self, name, url="", enabled=True, endorser={}, token="",
+                 subscribed_images=[], prefix=""):
         self.name = name
 
         self.url = url
         self.token = token
+
+        self.prefix = prefix
 
         # subscribed images
         self.subscribed_images = subscribed_images

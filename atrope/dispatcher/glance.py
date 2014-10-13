@@ -241,7 +241,7 @@ class Dispatcher(base.BaseDispatcher):
         tenants = self.ks_client.projects.list(name=tenant)
         return tenants[0].id if tenants else None
 
-    def dispatch(self, image, is_public, **kwargs):
+    def dispatch(self, image_name, image, is_public, **kwargs):
         """Upload an image to the glance service.
 
         If metadata is provided in the kwargs it will be associated with
@@ -250,7 +250,7 @@ class Dispatcher(base.BaseDispatcher):
 
         # TODO(aloga): missing hypervisor type, need list spec first
         metadata = {
-            "name": "%s%s" % (CONF.dispatchers.prefix, image.title),
+            "name": image_name,
             "tags": ["atrope"],
             "architecture": image.arch,
             "disk_format": None,

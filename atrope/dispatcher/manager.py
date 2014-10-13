@@ -70,9 +70,13 @@ class DispatcherManager(object):
                 kwargs["vo"] = image_list.image_list.vo
 
         for image in image_list.get_subscribed_images():
-            self.dispatch_image(image, is_public, **kwargs)
+            image_name = ("%(global prefix)s%(list prefix)s%(image name)s" %
+                          {"global prefix": CONF.dispatchers.prefix,
+                           "list prefix": image_list.prefix,
+                           "image name": image.title})
+            self.dispatch_image(image_name, image, is_public, **kwargs)
 
-    def dispatch_image(self, image, is_public, **kwargs):
+    def dispatch_image(self, image_name, image, is_public, **kwargs):
         """Dispatch a single image to each of the dispatchers."""
         for dispatcher in self.dispatchers:
-            dispatcher.dispatch(image, is_public, **kwargs)
+            dispatcher.dispatch(image_name, image, is_public, **kwargs)
