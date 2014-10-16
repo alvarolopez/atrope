@@ -58,10 +58,6 @@ class BaseImageListManager(object):
         """Load the image sources from disk."""
 
     @abc.abstractmethod
-    def add_image_list_source(self, image):
-        """Add an image source to the loaded sources."""
-
-    @abc.abstractmethod
     def write_image_list_sources(self):
         """Write image sources to disk."""
 
@@ -80,6 +76,13 @@ class BaseImageListManager(object):
             LOG.debug("Exception while downloading list '%s'" % l.name,
                       exc_info=e)
         return l
+
+    def add_image_list_source(self, image_list, force=False):
+        """Add an image source to the loaded sources."""
+        if image_list.name in self.lists and not force:
+            raise exception.DuplicatedImageList(id=image_list.name)
+
+        self.lists[image_list.name] = image_list
 
     def fetch_list(self, image_list):
         """Fetch (and verify) an individual list."""
@@ -136,13 +139,6 @@ class YamlImageListManager(BaseImageListManager):
                 prefix=list_meta.get("prefix", "")
             )
             self.lists[name] = l
-
-    def add_image_list_source(self, image_list, force=False):
-        """Add an image source to the loaded sources."""
-        if image_list.name in self.lists and not force:
-            raise exception.DuplicatedImageList(id=image_list.name)
-
-        self.lists[image_list.name] = image_list
 
     def write_image_list_sources(self):
         """Write images into YAML file."""
