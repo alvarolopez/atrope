@@ -9,13 +9,14 @@
 # value)
 #ca_path=/etc/grid-security/certificates/
 
+[sources]
 
 #
 # Options defined in atrope.image_list.manager
 #
 
 # Where the image list sources are stored. (string value)
-#image_list_sources=/etc/atrope/lists.yaml
+#hepix_sources=/etc/atrope/hepix.yaml
 
 
 [cache]
