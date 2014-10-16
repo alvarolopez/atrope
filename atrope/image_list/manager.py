@@ -131,13 +131,11 @@ class YamlImageListManager(BaseImageListManager):
         for name, list_meta in image_lists.iteritems():
             l = atrope.image_list.hepix.HepixImageListSource(
                 name,
-                url=list_meta.get("url", ""),
-                enabled=list_meta.get("enabled", True),
-                endorser=list_meta.get("endorser", {}),
-                token=list_meta.get("token", ""),
-                subscribed_images=list_meta.get("images", []),
-                prefix=list_meta.get("prefix", "")
-            )
+                url=list_meta.pop("url", ""),
+                enabled=list_meta.pop("enabled", True),
+                subscribed_images=list_meta.pop("images", []),
+                prefix=list_meta.pop("prefix", ""),
+                **list_meta)
             self.lists[name] = l
 
     def write_image_list_sources(self):

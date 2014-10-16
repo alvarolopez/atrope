@@ -28,7 +28,8 @@ class BaseImageListSource(object):
 
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, name, url="", enabled=True, subscribed_images=[], prefix=""):
+    def __init__(self, name, url="", enabled=True, subscribed_images=[],
+                 prefix="", **kwargs):
         self.name = name
         self.url = url
         self.enabled = enabled

@@ -85,8 +85,8 @@ class HepixImageList(object):
 class HepixImageListSource(source.BaseImageListSource):
     """An image list."""
 
-    def __init__(self, name, url="", enabled=True, endorser={}, token="",
-                 subscribed_images=[], prefix=""):
+    def __init__(self, name, url="", enabled=True, subscribed_images=[],
+                 prefix="", **kwargs):
 
         super(HepixImageListSource, self).__init__(
             name,
@@ -96,9 +96,9 @@ class HepixImageListSource(source.BaseImageListSource):
             prefix=prefix
         )
 
-        self.token = token
+        self.token = kwargs.get("token", "")
 
-        self.endorser = endorser
+        self.endorser = kwargs.get("endorser", {})
 
         self.image_list = None
 
