@@ -16,6 +16,7 @@ import json
 import urlparse
 
 import glanceclient
+from glanceclient import exc as glance_exc
 from keystoneclient.auth.identity import v2 as v2_auth
 from keystoneclient.auth.identity import v3 as v3_auth
 from keystoneclient import discover
@@ -321,7 +322,10 @@ class Dispatcher(base.BaseDispatcher):
         if metadata.get("vo", None) is not None:
             tenant = self._get_vo_tenant_mapping(metadata["vo"])
             if tenant is not None:
-                self.client.image_members.create(glance_image.id, tenant)
+                try:
+                    self.client.image_members.create(glance_image.id, tenant)
+                except glance_exc.HTTPConflict:
+                    pass
                 LOG.info("Image %s associated with VO %s, tenant %s" %
                          (image.identifier, metadata["vo"], tenant))
             else:
