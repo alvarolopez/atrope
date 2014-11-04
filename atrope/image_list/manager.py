@@ -65,10 +65,10 @@ class BaseImageListManager(object):
         try:
             l.fetch()
         except exception.AtropeException as e:
-            LOG.error("Error loading list '%s', reason: %s" %
-                      (l.name, e.message))
-            LOG.debug("Exception while downloading list '%s'" % l.name,
-                      exc_info=e)
+            LOG.error("Error loading list '%s' from '%s', reason: %s",
+                      l.name, l.url, e.message)
+            LOG.debug("Exception while downloading list '%s'",
+                      l.name, exc_info=e)
         return l
 
     def add_image_list_source(self, image_list, force=False):

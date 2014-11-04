@@ -65,7 +65,6 @@ def rm(path):
             rmtree(path)
         else:
             # delete file
-            print path
             os.remove(path)
     except OSError as exc:
         if exc.errno == errno.ENOENT:

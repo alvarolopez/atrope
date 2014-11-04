@@ -122,6 +122,14 @@ class Dispatcher(base.BaseDispatcher):
                 reason="Bad JSON."
             )
 
+        # Format is not defined in the spec. What is format? Maybe it is the
+        # container format? Or is it the image format? Try to do some ugly
+        # magic and infer what is this for...
+        # This makes me sad :-(
+        LOG.debug("The image spec is broken and I will try to guess what "
+                  "the container and the image format are. I cannot "
+                  "promise anything.")
+
     def _discover_auth_versions(self, session, auth_url):
         # discover the API versions the server is supporting base on the
         # given URL
@@ -247,7 +255,7 @@ class Dispatcher(base.BaseDispatcher):
 
         If metadata is provided in the kwargs it will be associated with
         the image."""
-        LOG.debug("Glance dispatching %s" % image)
+        LOG.info("Glance dispatching '%s'", image)
 
         # TODO(aloga): missing hypervisor type, need list spec first
         metadata = {
@@ -271,13 +279,6 @@ class Dispatcher(base.BaseDispatcher):
                 raise exception.MetadataOverwriteNotSupported(key=k)
             metadata[k] = v
 
-        # Format is not defined in the spec. What is format? Maybe it is the
-        # container format? Or is it the image format? Try to do some ugly
-        # magic and infer what is this for...
-        # This makes me sad :-(
-        LOG.warning("The image spec is broken and I will try to guess what "
-                    "I the container and the image format is. I cannot "
-                    "promise anything.")
         smth_format = image.format.lower()
         (metadata["container_format"],
          metadata["disk_format"]) = self._guess_formats(smth_format)
@@ -293,7 +294,7 @@ class Dispatcher(base.BaseDispatcher):
         if len(images) > 1:
             images = [img.id for img in images]
             LOG.error("Found several images with same sha512, please remove "
-                      "them manually %s.", images)
+                      "them manually and run atrope again: %s", images)
             raise exception.DuplicatedImage(images=images)
 
         try:
@@ -302,22 +303,23 @@ class Dispatcher(base.BaseDispatcher):
             glance_image = None
         else:
             if glance_image.sha512 != image.sha512:
-                LOG.info("Image %s is %s in glance but sha512 checksums are "
-                         "different, deleting it and reuploading.")
+                LOG.warning("Image '%s' is '%s' in glance but sha512 checksums are "
+                            "different, deleting it and reuploading.",
+                            image.identifier, glance_image.id)
                 self.client.images.delete(glance_image.id)
                 glance_image = None
 
         if not glance_image:
-            LOG.debug("Creating image %s.", image.identifier)
+            LOG.debug("Creating image '%s'.", image.identifier)
             glance_image = self.client.images.create(**metadata)
 
         if glance_image.status == "queued":
+            LOG.debug("Uploading image '%s'.", image.identifier)
             self._upload(glance_image.id, image)
 
         if glance_image.status == "active":
-            LOG.debug("Image %s is %s in glance.",
-                      image.identifier,
-                      glance_image.id)
+            LOG.info("Image '%s' stored in glance as '%s'.",
+                      image.identifier, glance_image.id)
 
         if metadata.get("vo", None) is not None:
             tenant = self._get_vo_tenant_mapping(metadata["vo"])
@@ -326,12 +328,12 @@ class Dispatcher(base.BaseDispatcher):
                     self.client.image_members.create(glance_image.id, tenant)
                 except glance_exc.HTTPConflict:
                     pass
-                LOG.info("Image %s associated with VO %s, tenant %s" %
-                         (image.identifier, metadata["vo"], tenant))
+                LOG.info("Image '%s' associated with VO '%s', tenant '%s'",
+                         image.identifier, metadata["vo"], tenant)
             else:
-                LOG.warning("Image %s is associated with VO %s but no "
-                            "mapping found!" % (image.identifier,
-                                                metadata["vo"]))
+                LOG.error("Image '%s' is associated with VO '%s' but no "
+                          "tenant mapping could be found!",
+                          image.identifier, metadata["vo"])
 
     def sync(self, image_list):
         """Sunc image list with dispached images."""
@@ -346,11 +348,11 @@ class Dispatcher(base.BaseDispatcher):
         for image in self.client.images.list(**kwargs):
             appdb_id = image.get("appdb_id", "")
             if appdb_id not in valid_images:
-                LOG.info("Image %s in glance is not valid anymore, "
-                         "deleting it", image.id)
+                LOG.warning("Glance image '%s' is not valid anymore, "
+                            "deleting it", image.id)
                 self.client.images.delete(image.id)
 
-        LOG.info("Sync terminated for image list %s", image_list.name)
+        LOG.info("Sync terminated for image list '%s'", image_list.name)
 
 
     def _upload(self, id, image):

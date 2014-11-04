@@ -137,7 +137,7 @@ class HepixImageListSource(source.BaseImageListSource):
             try:
                 list_as_dict = json.loads(raw_list)
             except ValueError:
-                LOG.error("Invalid JSON for image list %s", self.name)
+                LOG.error("Invalid JSON for image list '%s'", self.name)
                 raise exception.InvalidImageList(reason="Invalid JSON.")
 
             image_list = HepixImageList(list_as_dict)
@@ -193,16 +193,15 @@ class HepixImageListSource(source.BaseImageListSource):
         list_endorser = self.image_list.endorser
 
         if self.endorser["dn"] != list_endorser.dn:
-            msg = ("List '%s' endorser is not trusted, DN mismatch %s != %s" %
-                   (self.name, self.endorser["dn"], list_endorser.dn))
-            LOG.error(msg)
+            LOG.error("List '%s' endorser is not trusted, DN mismatch "
+                      "'%s' != '%s'",
+                      self.name, self.endorser["dn"], list_endorser.dn)
             self.error = msg
             return False
 
         if self.endorser["ca"] != list_endorser.ca:
-            msg = ("List '%s' endorser CA is invalid %s != %s" %
-                   (self.name, self.endorser["ca"], list_endorser.ca))
-            LOG.error(msg)
+            LOG.error("List '%s' endorser CA is invalid '%s' != '%s'",
+                      self.name, self.endorser["ca"], list_endorser.ca)
             self.error = msg
             return False
         return True
@@ -210,8 +209,8 @@ class HepixImageListSource(source.BaseImageListSource):
     def _check_expiry(self):
         now = datetime.datetime.now(dateutil.tz.tzlocal())
         if self.image_list.expires < now:
-            LOG.info("List '%s' expired on '%s'" %
-                     (self.name, self.image_list.expires))
+            LOG.warning("List '%s' expired on '%s'",
+                        self.name, self.image_list.expires)
             return True
         return False
 

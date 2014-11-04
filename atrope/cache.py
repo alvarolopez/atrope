@@ -70,7 +70,11 @@ class CacheManager(object):
                 if i not in valid_paths:
                     invalid_paths.append(i)
 
-        LOG.debug("Marked %s as invalid cache files/dirs." % invalid_paths)
+        if invalid_paths:
+            LOG.debug("Marked %s as invalid cache files/dirs.", invalid_paths)
+        else:
+            LOG.debug("No invalid files in cache dir.")
+
         for i in invalid_paths:
-            LOG.debug("Removing %s from cache directory." % i)
+            LOG.warning("Removing '%s' from cache directory.".  i)
             utils.rm(i)

@@ -20,8 +20,6 @@ from oslo.log import log
 
 from atrope import exception
 
-LOG = log.getLogger(__name__)
-
 
 class BaseImageListSource(object):
     """An image list."""

@@ -99,8 +99,8 @@ class HepixImage(BaseImage):
             setattr(self, attr, value)
 
     def _download(self, location):
-        LOG.debug("Downloading image '%s' into '%s'" %
-                  (self.identifier, location))
+        LOG.info("Downloading image '%s' into '%s'",
+                 self.identifier, location)
         with open(location, 'wb') as f:
             response = requests.get(self.uri, stream=True)
 
@@ -118,8 +118,8 @@ class HepixImage(BaseImage):
             LOG.error(e)
             raise
         else:
-            LOG.debug("Image '%s' downloaded into '%s'" %
-                      (self.identifier, location))
+            LOG.info("Image '%s' stored as '%s'",
+                     self.identifier, location)
 
     def download(self, basedir):
         # The image has been already downloaded in this execution.
@@ -135,11 +135,12 @@ class HepixImage(BaseImage):
             try:
                 self.verify_checksum(location=location)
             except exception.ImageVerificationFailed:
-                LOG.info("Image '%s' found in '%s' is not valid, "
-                         "downloading again" % (self.identifier, location))
+                LOG.warning("Image '%s' found in '%s' is not valid, "
+                            "downloading again",
+                            self.identifier, location)
                 self._download(location)
             else:
-                LOG.debug("Image '%s' already downloaded into '%s'" %
-                          (self.identifier, location))
+                LOG.debug("Image '%s' already downloaded into '%s'",
+                          self.identifier, location)
 
         self.location = location
