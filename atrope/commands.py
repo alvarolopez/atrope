@@ -246,7 +246,7 @@ class CommandImageListIndex(Command):
         # TODO(aloga): wrap the fields, since the output is huge
         fields = ["name", "url", "enabled", "endorser"]
         objs = []
-        for l in manager.configured_lists.values():
+        for l in manager.lists.values():
             d = {}
             for f in fields:
                 d[f] = getattr(l, f)
