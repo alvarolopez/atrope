@@ -76,5 +76,5 @@ class CacheManager(object):
             LOG.debug("No invalid files in cache dir.")
 
         for i in invalid_paths:
-            LOG.warning("Removing '%s' from cache directory.".  i)
+            LOG.warning("Removing '%s' from cache directory.", i)
             utils.rm(i)

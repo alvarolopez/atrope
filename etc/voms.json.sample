@@ -1,0 +1,8 @@
+{
+        "VO 1": {
+            "tenant": "tenant 1"
+        },
+        "VO 2": {
+            "tenant": "tenant 2"
+        }
+}
