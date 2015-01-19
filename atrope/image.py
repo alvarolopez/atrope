@@ -35,6 +35,7 @@ class BaseImage(object):
         self.sha512 = None
         self.identifier = None
         self.location = None
+        self.verified = False
 
     @abc.abstractmethod
     def download(self, dest):
@@ -58,6 +59,8 @@ class BaseImage(object):
                 expected=self.sha512,
                 obtained=sha512.hexdigest()
             )
+
+        self.verified = True
 
 
 class HepixImage(BaseImage):
@@ -102,11 +105,18 @@ class HepixImage(BaseImage):
         LOG.info("Downloading image '%s' into '%s'",
                  self.identifier, location)
         with open(location, 'wb') as f:
-            response = requests.get(self.uri, stream=True)
+            try:
+                response = requests.get(self.uri, stream=True)
+            except Exception as e:
+                LOG.error(e)
+                raise exception.ImageDownloadFailed(code=e.errno,
+                                                    reason=e.message)
 
             if not response.ok:
-                # FIXME(aloga)
-                pass
+                LOG.error("Cannot download image: (%s) %s",
+                          response.status_code, response.reason)
+                raise exception.ImageDownloadFailed(code=response.status_code,
+                                                    reason=response.reason)
 
             for block in response.iter_content(1024):
                 if block:

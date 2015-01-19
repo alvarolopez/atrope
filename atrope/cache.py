@@ -55,7 +55,8 @@ class CacheManager(object):
                     for img in l.get_subscribed_images():
                         try:
                             img.download(imgdir)
-                        except exception.ImageVerificationFailed:
+                        except (exception.ImageVerificationFailed,
+                                exception.ImageDownloadFailed):
                             # FIXME(aloga): we should notify about this in the
                             # cmd line.
                             pass
