@@ -44,6 +44,9 @@ class BaseImageListSource(object):
     def fetch(self):
         """ """
 
+    def get_valid_subscribed_images(self):
+        return [i for i in self.get_subscribed_images() if i.verified]
+
     def get_subscribed_images(self):
         """Get the subscribed images from the fetched image list."""
         if not self.enabled:

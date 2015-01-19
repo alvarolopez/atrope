@@ -344,8 +344,7 @@ class Dispatcher(base.BaseDispatcher):
             }
         }
         valid_images = [i.identifier
-                        for i in image_list.get_subscribed_images()
-                        if i.verified]
+                        for i in image_list.get_valid_subscribed_images()]
         for image in self.client.images.list(**kwargs):
             appdb_id = image.get("appdb_id", "")
             if appdb_id not in valid_images:

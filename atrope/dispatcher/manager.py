@@ -69,7 +69,7 @@ class DispatcherManager(object):
             if image_list.image_list.vo is not None:
                 kwargs["vo"] = image_list.image_list.vo
 
-        for image in image_list.get_subscribed_images():
+        for image in image_list.get_valid_subscribed_images():
             image_name = ("%(global prefix)s%(list prefix)s%(image name)s" %
                           {"global prefix": CONF.dispatchers.prefix,
                            "list prefix": image_list.prefix,

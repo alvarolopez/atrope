@@ -59,7 +59,6 @@ class BaseImage(object):
                 expected=self.sha512,
                 obtained=sha512.hexdigest()
             )
-
         self.verified = True
 
 
