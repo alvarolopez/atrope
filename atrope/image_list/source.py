@@ -16,7 +16,7 @@
 
 import abc
 
-from oslo.log import log
+from oslo_log import log
 
 from atrope import exception
 

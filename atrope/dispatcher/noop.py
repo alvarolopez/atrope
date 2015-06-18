@@ -12,7 +12,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-from oslo.log import log
+from oslo_log import log
 
 from atrope.dispatcher import base
 

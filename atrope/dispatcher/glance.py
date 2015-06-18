@@ -24,7 +24,7 @@ from keystoneclient.openstack.common.apiclient import exceptions as ks_exc
 from keystoneclient import session
 from keystoneclient.v3 import client
 from oslo.config import cfg
-from oslo.log import log
+from oslo_log import log
 
 from atrope.dispatcher import base
 from atrope import exception

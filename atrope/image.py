@@ -17,7 +17,7 @@
 import abc
 import os.path
 
-from oslo.log import log
+from oslo_log import log
 import requests
 
 from atrope import exception

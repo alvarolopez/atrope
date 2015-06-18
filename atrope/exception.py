@@ -17,7 +17,7 @@
 import os
 import sys
 
-from oslo.log import log
+from oslo_log import log
 
 LOG = log.getLogger(__name__)
 

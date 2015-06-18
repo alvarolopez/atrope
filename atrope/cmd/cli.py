@@ -15,7 +15,7 @@
 import sys
 
 from oslo.config import cfg
-from oslo.log import log
+from oslo_log import log
 
 import atrope.commands
 import atrope.config

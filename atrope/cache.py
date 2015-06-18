@@ -17,7 +17,7 @@
 import os.path
 
 from oslo.config import cfg
-from oslo.log import log
+from oslo_log import log
 
 from atrope import exception
 from atrope import paths

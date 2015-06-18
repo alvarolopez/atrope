@@ -22,7 +22,7 @@ import requests
 import dateutil.parser
 import dateutil.tz
 from oslo.config import cfg
-from oslo.log import log
+from oslo_log import log
 
 from atrope import endorser
 from atrope import exception
