@@ -117,7 +117,7 @@ class YamlImageListManager(BaseImageListManager):
 
         try:
             with open(CONF.sources.hepix_sources, "rb") as f:
-                image_lists = yaml.safe_load(f)
+                image_lists = yaml.safe_load(f) or {}
         except IOError as e:
             raise exception.CannotOpenFile(file=CONF.sources.hepix_sources,
                                            errno=e.errno)
