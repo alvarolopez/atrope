@@ -26,8 +26,7 @@ class Dispatcher(base.BaseDispatcher):
         """I do nothing."""
 
     def dispatch(self, image_name, image, *args, **kwargs):
-        """
-        In theory I should do something with the image.
+        """In theory I should do something with the image.
 
         In practise I do nothing, since I am the NOOP dispatcher.
         """

@@ -44,8 +44,7 @@ LOG = log.getLogger(__name__)
 
 
 class HepixImageList(object):
-    """
-    A Hepix Image List.
+    """A Hepix Image List.
 
     Objects of this class will hold the representation of the
     downloaded Hepix image list.
@@ -147,8 +146,7 @@ class HepixImageListSource(source.BaseImageListSource):
             self.trusted = self._check_endorser()
 
     def _fetch(self):
-        """
-        Get the image list from the server.
+        """Get the image list from the server.
 
         If it is needed, use a token to authenticate against the server.
 
@@ -168,8 +166,7 @@ class HepixImageListSource(source.BaseImageListSource):
             return response.content
 
     def _verify(self):
-        """
-        Verify the image list SMIME signature.
+        """Verify the image list SMIME signature.
 
         :returns: tuple (signers, raw_list) with the signers and the raw list.
         :raises: exception.SMIMEValidationError if it is not possible to verify
@@ -184,8 +181,7 @@ class HepixImageListSource(source.BaseImageListSource):
             return True, signers, raw_list
 
     def _check_endorser(self):
-        """
-        Check the endorsers of an image list.
+        """Check the endorsers of an image list.
 
         :returns: True of False if endorsers are trusted or not.
         """

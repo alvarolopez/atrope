@@ -56,8 +56,7 @@ class BaseImageListManager(object):
         """Write image sources to disk."""
 
     def _fetch_and_verify(self, l):
-        """
-        Fetch and verify an image list.
+        """Fetch and verify an image list.
 
         If there are errors loading the list the appropriate attributes won't
         be set, so there is no need to fail here, but rather return the list.

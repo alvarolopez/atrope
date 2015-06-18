@@ -42,7 +42,7 @@ class BaseImageListSource(object):
 
     @abc.abstractmethod
     def fetch(self):
-        """ """
+        """Fetch the image list."""
 
     def get_valid_subscribed_images(self):
         return [i for i in self.get_subscribed_images() if i.verified]

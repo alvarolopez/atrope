@@ -39,8 +39,7 @@ class BaseImage(object):
 
     @abc.abstractmethod
     def download(self, dest):
-        """
-        Download the image.
+        """Download the image.
 
         :param dest: destionation directory.
         """

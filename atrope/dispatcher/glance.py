@@ -252,7 +252,8 @@ class Dispatcher(base.BaseDispatcher):
         """Upload an image to the glance service.
 
         If metadata is provided in the kwargs it will be associated with
-        the image."""
+        the image.
+        """
         LOG.info("Glance dispatching '%s'", image)
 
         # TODO(aloga): missing hypervisor type, need list spec first
