@@ -32,13 +32,12 @@ class AtropeException(Exception):
             try:
                 message = self.msg_fmt % kwargs
             except Exception:
-                exc_info = sys.exc_info()
                 # kwargs doesn't match a variable in the message
                 # log the issue and the kwargs
                 LOG.exception('Exception in string format operation')
                 for name, value in kwargs.iteritems():
                     LOG.error("%s: %s" % (name, value))
-                raise exc_info[0], exc_info[1], exc_info[2]
+                message = self.msg_fmt
 
         super(AtropeException, self).__init__(message)
 
