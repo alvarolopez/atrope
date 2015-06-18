@@ -23,6 +23,7 @@ import atrope.image_list.manager
 from atrope import utils
 
 from oslo.config import cfg
+from six.moves import input
 
 CONF = cfg.CONF
 
@@ -123,13 +124,13 @@ class CommandImageListAdd(Command):
     def _get_values(self, url, token, prefix, enabled, endorser):
         def get_endorser(default={}):
             print("Enter endorser details.")
-            dn = raw_input("\tEndorser DN [%s]: " %
-                           default.get("dn", "")) or default.get("dn")
+            dn = input("\tEndorser DN [%s]: " %
+                       default.get("dn", "")) or default.get("dn")
             if not dn:
                 return {}
 
-            ca = raw_input("\tEndorser CA [%s]: " %
-                           default.get("ca", "")) or default.get("ca")
+            ca = input("\tEndorser CA [%s]: " %
+                       default.get("ca", "")) or default.get("ca")
             if not ca:
                 print("CA cannot be empty, try again.")
                 return get_endorser(default={"dn": dn})
@@ -137,7 +138,7 @@ class CommandImageListAdd(Command):
             return {"dn": dn, "ca": ca}
 
         def get_str(msg, mandatory=False, default=""):
-            identifier = raw_input("%s [%s]: " % (msg, default)) or default
+            identifier = input("%s [%s]: " % (msg, default)) or default
             if not identifier and mandatory:
                 raise exception.MissingMandatoryFieldImageList(field=msg)
             return identifier

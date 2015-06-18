@@ -21,6 +21,7 @@ import os
 import os.path
 
 import prettytable
+from six.moves import input
 
 
 def print_list(objs, fields, sortby=None):
@@ -117,7 +118,7 @@ def yn_question(msg="Enabled", default=True):
     else:
         default = "n"
 
-    yn = raw_input("%s (y/n) [%s]: " % (msg, default)).lower() or default
+    yn = input("%s (y/n) [%s]: " % (msg, default)).lower() or default
     if yn == "y":
         return True
     elif yn == "n":
