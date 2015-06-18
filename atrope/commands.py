@@ -143,7 +143,23 @@ class CommandImageListAdd(Command):
                 raise exception.MissingMandatoryFieldImageList(field=msg)
             return identifier
 
-        def print_image(identifier, url, token, prefix, enabled, endorser):
+        def get_list(msg, mandatory=False):
+            print(msg)
+            print("\t(one value per line, empty to finish)")
+            ret = []
+            el = None
+            while True:
+                el = input("\timage id: ")
+                if not el:
+                    break
+                ret.append(el)
+
+            if not ret and mandatory:
+                raise exception.MissingMandatoryFieldImageList(field=msg)
+            return ret
+
+        def print_image_list(identifier, url, token, prefix, enabled,
+                             endorser, subscribed_images):
             d = {
                 "identifier": identifier,
                 "url": url,
@@ -152,6 +168,7 @@ class CommandImageListAdd(Command):
                 "enabled": enabled,
                 "endorser dn": endorser.get("dn"),
                 "endorser ca": endorser.get("ca"),
+                "subscribed images": subscribed_images,
             }
             utils.print_dict(d)
 
@@ -162,18 +179,22 @@ class CommandImageListAdd(Command):
             enabled = utils.yn_question(default=enabled)
             endorser = get_endorser(default=endorser)
 
-            token = get_str("token", default=token)
+            token = get_str("auth token", default=token)
 
             prefix = get_str("prefix", default=prefix)
 
-            print_image(identifier, url, token, prefix, enabled, endorser)
+            subscribed_images = get_list("subscribed images")
+
+            print_image_list(identifier, url, token, prefix, enabled,
+                             endorser, subscribed_images)
             msg = "Is the information above correct?"
             correct = utils.yn_question(msg=msg)
             if correct:
                 break
             print("\nOK, lets try again")
 
-        return identifier, url, enabled, endorser, token, prefix
+        return (identifier, url, enabled, endorser,
+                token, prefix, subscribed_images)
 
     def run(self):
         identifier = CONF.command.list_id
@@ -199,7 +220,7 @@ class CommandImageListAdd(Command):
 
     def add_non_interactive(self, identifier, url, token, prefix, enabled,
                             endorser, force):
-        image_list = atrope.image_list.source.ImageListSource(
+        image_list = atrope.image_list.hepix.HepixImageListSource(
             identifier,
             url,
             enabled=enabled,
@@ -214,16 +235,17 @@ class CommandImageListAdd(Command):
 
     def add_interative(self, url, token, prefix, enabled, endorser, force):
         print("Adding image list, enter the following details (Ctr+C to exit)")
-        (identifier, url, enabled,
-         endorser, token, prefix) = self._get_values(url, token, prefix,
-                                                     enabled, endorser)
-        image_list = atrope.image_list.source.ImageListSource(
+        (identifier, url, enabled, endorser, token, prefix,
+         subscribed_images) = self._get_values(url, token, prefix,
+                                               enabled, endorser)
+        image_list = atrope.image_list.hepix.HepixImageListSource(
             identifier,
             url,
             enabled=enabled,
             endorser=endorser,
             token=token,
-            prefix=prefix
+            prefix=prefix,
+            subscribed_images=subscribed_images
         )
 
         manager = atrope.image_list.manager.YamlImageListManager()

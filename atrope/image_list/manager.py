@@ -140,7 +140,7 @@ class YamlImageListManager(BaseImageListManager):
                            "endorser": image_list.endorser,
                            "token": image_list.token,
                            "prefix": image_list.prefix,
-                           "images": image_list.images}
+                           "subscribed images": image_list.subscribed_images}
         dump = yaml.dump(lists)
         if not dump:
             raise exception.AtropeException()
