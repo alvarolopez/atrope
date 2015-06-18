@@ -302,8 +302,8 @@ class Dispatcher(base.BaseDispatcher):
             glance_image = None
         else:
             if glance_image.sha512 != image.sha512:
-                LOG.warning("Image '%s' is '%s' in glance but sha512 checksums are "
-                            "different, deleting it and reuploading.",
+                LOG.warning("Image '%s' is '%s' in glance but sha512 checksums"
+                            "are different, deleting it and reuploading.",
                             image.identifier, glance_image.id)
                 self.client.images.delete(glance_image.id)
                 glance_image = None
