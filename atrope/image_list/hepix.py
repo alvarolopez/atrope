@@ -189,15 +189,17 @@ class HepixImageListSource(source.BaseImageListSource):
         list_endorser = self.image_list.endorser
 
         if self.endorser["dn"] != list_endorser.dn:
-            LOG.error("List '%s' endorser is not trusted, DN mismatch "
-                      "'%s' != '%s'",
-                      self.name, self.endorser["dn"], list_endorser.dn)
+            msg = ("List '%s' endorser is not trusted, DN mismatch "
+                   "'%s' != '%s'" %
+                   self.name, self.endorser["dn"], list_endorser.dn)
+            LOG.error(msg)
             self.error = msg
             return False
 
         if self.endorser["ca"] != list_endorser.ca:
-            LOG.error("List '%s' endorser CA is invalid '%s' != '%s'",
-                      self.name, self.endorser["ca"], list_endorser.ca)
+            msg = ("List '%s' endorser CA is invalid '%s' != '%s'" %
+                   self.name, self.endorser["ca"], list_endorser.ca)
+            LOG.error(msg)
             self.error = msg
             return False
         return True
