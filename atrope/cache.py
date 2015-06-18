@@ -41,11 +41,15 @@ class CacheManager(object):
         utils.makedirs(self.path)
 
     def sync(self, lists):
+        LOG.info("Starting cache sync")
         valid_paths = [self.path]
         invalid_paths = []
 
         for l in lists.values():
+            LOG.info("Syncing list with ID '%s'", l.name)
             if l.enabled:
+                LOG.info("List '%s' is enabled, checking if downloaded images "
+                         "are valid", l.name)
                 basedir = os.path.join(self.path, l.name)
                 valid_paths.append(basedir)
                 imgdir = os.path.join(self.path, l.name, 'images')
@@ -62,6 +66,10 @@ class CacheManager(object):
                             pass
                         else:
                             valid_paths.append(img.location)
+            else:
+                LOG.info("List '%s' is disabled, images will be "
+                         "marked for removal", l.name)
+
 
         for root, dirs, files in os.walk(self.path):
             if root not in valid_paths:
@@ -72,10 +80,11 @@ class CacheManager(object):
                     invalid_paths.append(i)
 
         if invalid_paths:
-            LOG.debug("Marked %s as invalid cache files/dirs.", invalid_paths)
+            LOG.info("Marked %s as invalid cache files/dirs.", invalid_paths)
         else:
-            LOG.debug("No invalid files in cache dir.")
+            LOG.info("No invalid files in cache dir.")
 
         for i in invalid_paths:
             LOG.warning("Removing '%s' from cache directory.", i)
             utils.rm(i)
+        LOG.info("Sync completed")
