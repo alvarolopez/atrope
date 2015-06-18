@@ -18,11 +18,11 @@ import datetime
 import json
 import pprint
 
-import requests
 import dateutil.parser
 import dateutil.tz
 from oslo.config import cfg
 from oslo_log import log
+import requests
 
 from atrope import endorser
 from atrope import exception

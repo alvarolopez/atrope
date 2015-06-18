@@ -16,9 +16,9 @@
 
 import errno
 import hashlib
-import shutil
 import os
 import os.path
+import shutil
 
 import prettytable
 from six.moves import input
