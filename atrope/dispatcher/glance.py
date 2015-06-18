@@ -58,12 +58,12 @@ opts = [
                     'If this option is not specified, the image service will'
                     'be obtained from the identity service.'),
     cfg.BoolOpt('insecure',
-               default=False,
-               help='Explicitly allow us to perform '
-                    '\"insecure SSL\" (https) requests. The server\'s '
-                    'certificate will not be verified against any '
-                    'certificate authorities. This option should '
-                    'be used with caution.'),
+                default=False,
+                help='Explicitly allow us to perform '
+                     '\"insecure SSL\" (https) requests. The server\'s '
+                     'certificate will not be verified against any '
+                     'certificate authorities. This option should '
+                     'be used with caution.'),
 ]
 
 CONF = cfg.CONF
@@ -152,10 +152,10 @@ class Dispatcher(base.BaseDispatcher):
             else:
                 # not enough information to determine the auth version
                 msg = ('Unable to determine the Keystone version '
-                        'to authenticate with using the given '
-                        'auth_url. Identity service may not support API '
-                        'version discovery. Please provide a versioned '
-                        'auth_url instead. error=%s') % (e)
+                       'to authenticate with using the given '
+                       'auth_url. Identity service may not support API '
+                       'version discovery. Please provide a versioned '
+                       'auth_url instead. error=%s') % (e)
                 raise exception.GlanceError(msg)
 
         return (v2_auth_url, v3_auth_url)
@@ -180,17 +180,15 @@ class Dispatcher(base.BaseDispatcher):
         user_domain_id = kwargs.pop('user_domain_id', None)
         # project and tenant can be used interchangeably
         project_id = (kwargs.pop('project_id', None) or
-                        kwargs.pop('tenant_id', None))
+                      kwargs.pop('tenant_id', None))
         project_name = (kwargs.pop('project_name', None) or
                         kwargs.pop('tenant_name', None))
         project_domain_id = kwargs.pop('project_domain_id', None)
         project_domain_name = kwargs.pop('project_domain_name', None)
         auth = None
 
-        use_domain = (user_domain_id or
-                        user_domain_name or
-                        project_domain_id or
-                        project_domain_name)
+        use_domain = (user_domain_id or user_domain_name or
+                      project_domain_id or project_domain_name)
         use_v3 = v3_auth_url and (use_domain or (not v2_auth_url))
         use_v2 = v2_auth_url and not use_domain
 
@@ -240,8 +238,8 @@ class Dispatcher(base.BaseDispatcher):
         if self.ks_session is None:
             self.ks_session = self._get_ks_session(**kwargs)
         endpoint = CONF.glance.endpoint or self.ks_session.get_endpoint(
-                service_type='image',
-                endpoint_type='public')
+            service_type='image',
+            endpoint_type='public')
         self.ks_client = client.Client(session=self.ks_session)
         return self.ks_session.get_token(), endpoint
 
@@ -319,7 +317,7 @@ class Dispatcher(base.BaseDispatcher):
 
         if glance_image.status == "active":
             LOG.info("Image '%s' stored in glance as '%s'.",
-                      image.identifier, glance_image.id)
+                     image.identifier, glance_image.id)
 
         if metadata.get("vo", None) is not None:
             tenant = self._get_vo_tenant_mapping(metadata["vo"])
