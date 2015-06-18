@@ -211,7 +211,7 @@ class CommandImageListAdd(Command):
         manager.add_image_list_source(image_list, force=force)
         manager.write_image_list_sources()
 
-    def add_interative(self, url, token,prefix,  enabled, endorser, force):
+    def add_interative(self, url, token, prefix, enabled, endorser, force):
         print("Adding image list, enter the following details (Ctr+C to exit)")
         (identifier, url, enabled,
          endorser, token, prefix) = self._get_values(url, token, prefix,
