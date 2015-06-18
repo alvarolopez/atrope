@@ -14,6 +14,8 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+from __future__ import print_function
+
 import sys
 
 from atrope import exception
@@ -120,7 +122,7 @@ class CommandImageListAdd(Command):
 
     def _get_values(self, url, token, prefix, enabled, endorser):
         def get_endorser(default={}):
-            print "Enter endorser details."
+            print("Enter endorser details.")
             dn = raw_input("\tEndorser DN [%s]: " %
                            default.get("dn", "")) or default.get("dn")
             if not dn:
@@ -129,7 +131,7 @@ class CommandImageListAdd(Command):
             ca = raw_input("\tEndorser CA [%s]: " %
                            default.get("ca", "")) or default.get("ca")
             if not ca:
-                print "CA cannot be empty, try again."
+                print("CA cannot be empty, try again.")
                 return get_endorser(default={"dn": dn})
 
             return {"dn": dn, "ca": ca}
@@ -168,8 +170,7 @@ class CommandImageListAdd(Command):
             correct = utils.yn_question(msg=msg)
             if correct:
                 break
-            print
-            print "OK, lets try again"
+            print("\nOK, lets try again")
 
         return identifier, url, enabled, endorser, token, prefix
 
@@ -211,7 +212,7 @@ class CommandImageListAdd(Command):
         manager.write_image_list_sources()
 
     def add_interative(self, url, token,prefix,  enabled, endorser, force):
-        print "Adding image list, enter the following details (Ctr+C to exit)"
+        print("Adding image list, enter the following details (Ctr+C to exit)")
         (identifier, url, enabled,
          endorser, token, prefix) = self._get_values(url, token, prefix,
                                                      enabled, endorser)
@@ -316,8 +317,8 @@ class CommandManager(object):
         try:
             CONF.command.func()
         except exception.AtropeException as e:
-            print >> sys.stderr, "ERROR: %s" % e
+            print("ERROR: %s" % e, file=sys.stderr)
             sys.exit(1)
         except KeyboardInterrupt:
-            print >> sys.stderr, "\nExiting..."
+            print("\nExiting...", file=sys.stderr)
             sys.exit(0)

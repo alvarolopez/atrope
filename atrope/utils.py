@@ -123,5 +123,5 @@ def yn_question(msg="Enabled", default=True):
     elif yn == "n":
         return False
     else:
-        print "Please enter one of 'Y' or 'N'."
+        print("Please enter one of 'Y' or 'N'.")
         return yn_question()
