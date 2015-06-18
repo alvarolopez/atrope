@@ -34,13 +34,13 @@ CONF.register_opts(opts, group="cache")
 
 LOG = log.getLogger(__name__)
 
+
 class CacheManager(object):
     def __init__(self):
         self.path = os.path.abspath(CONF.cache.path)
         utils.makedirs(self.path)
 
     def sync(self, lists):
-
         valid_paths = [self.path]
         invalid_paths = []
 

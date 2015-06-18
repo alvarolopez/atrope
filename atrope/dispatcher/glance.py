@@ -72,6 +72,7 @@ CONF.register_opts(opts, group="glance")
 
 LOG = log.getLogger(__name__)
 
+
 class Dispatcher(base.BaseDispatcher):
     """Glance dispatcher.
 
@@ -159,7 +160,6 @@ class Dispatcher(base.BaseDispatcher):
                 raise exception.GlanceError(msg)
 
         return (v2_auth_url, v3_auth_url)
-
 
     def _get_ks_session(self, **kwargs):
         ks_session = session.Session.construct(kwargs)
@@ -352,7 +352,6 @@ class Dispatcher(base.BaseDispatcher):
                 self.client.images.delete(image.id)
 
         LOG.info("Sync terminated for image list '%s'", image_list.name)
-
 
     def _upload(self, id, image):
         fd = open(image.location, "rb")

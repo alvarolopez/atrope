@@ -19,6 +19,7 @@ from oslo_log import log
 
 log.register_options(cfg.CONF)
 
+
 def parse_args(argv, default_config_files=None):
     cfg.CONF(argv[1:],
              project='atrope',
