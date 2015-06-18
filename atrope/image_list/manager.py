@@ -18,6 +18,7 @@ import abc
 
 from oslo.config import cfg
 from oslo_log import log
+import six
 import yaml
 
 from atrope import cache
@@ -31,9 +32,8 @@ CONF.import_opt("hepix_sources", "atrope.image_list.hepix", group="sources")
 LOG = log.getLogger(__name__)
 
 
+@six.add_metaclass(abc.ABCMeta)
 class BaseImageListManager(object):
-    __metaclass__ = abc.ABCMeta
-
     def __init__(self, dispatcher=None):
         self.cache_manager = cache.CacheManager()
         self._dispatcher = None

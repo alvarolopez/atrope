@@ -17,14 +17,14 @@
 import abc
 
 from oslo_log import log
+import six
 
 from atrope import exception
 
 
+@six.add_metaclass(abc.ABCMeta)
 class BaseImageListSource(object):
     """An image list."""
-
-    __metaclass__ = abc.ABCMeta
 
     def __init__(self, name, url="", enabled=True, subscribed_images=[],
                  prefix="", **kwargs):

@@ -14,11 +14,12 @@
 
 import abc
 
+import six
 
+
+@six.add_metaclass(abc.ABCMeta)
 class BaseDispatcher(object):
     """Base class for all dispatchers."""
-
-    __metaclass__ = abc.ABCMeta
 
     @abc.abstractmethod
     def sync(self, image_list):

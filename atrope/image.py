@@ -19,6 +19,7 @@ import os.path
 
 from oslo_log import log
 import requests
+import six
 
 from atrope import exception
 from atrope import utils
@@ -26,9 +27,8 @@ from atrope import utils
 LOG = log.getLogger(__name__)
 
 
+@six.add_metaclass(abc.ABCMeta)
 class BaseImage(object):
-    __metaclass__ = abc.ABCMeta
-
     @abc.abstractmethod
     def __init__(self, image_info):
         self.uri = None
