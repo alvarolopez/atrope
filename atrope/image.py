@@ -100,8 +100,8 @@ class HepixImage(BaseImage):
             setattr(self, attr, value)
 
     def _download(self, location):
-        LOG.info("Downloading image '%s' into '%s'",
-                 self.identifier, location)
+        LOG.info("Downloading image '%s' from '%s' into '%s'",
+                 self.identifier, self.uri, location)
         with open(location, 'wb') as f:
             try:
                 response = requests.get(self.uri, stream=True)
@@ -148,7 +148,7 @@ class HepixImage(BaseImage):
                             self.identifier, location)
                 self._download(location)
             else:
-                LOG.debug("Image '%s' already downloaded into '%s'",
-                          self.identifier, location)
+                LOG.info("Image '%s' already downloaded into '%s'",
+                         self.identifier, location)
 
         self.location = location
