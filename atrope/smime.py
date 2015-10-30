@@ -17,7 +17,7 @@
 import os
 
 import M2Crypto
-from oslo.config import cfg
+from oslo_config import cfg
 
 from atrope import exception
 

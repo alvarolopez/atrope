@@ -14,7 +14,7 @@
 
 import sys
 
-from oslo.config import cfg
+from oslo_config import cfg
 
 import atrope.config
 import atrope.image_list

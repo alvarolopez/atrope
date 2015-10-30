@@ -22,7 +22,7 @@ from atrope import exception
 import atrope.image_list.manager
 from atrope import utils
 
-from oslo.config import cfg
+from oslo_config import cfg
 from six.moves import input
 
 CONF = cfg.CONF
