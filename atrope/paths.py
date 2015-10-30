@@ -23,7 +23,7 @@ import os
 
 from oslo_config import cfg
 
-path_opts = [
+opts = [
     cfg.StrOpt('basedir',
                default=os.path.abspath(os.path.join(os.path.dirname(__file__),
                                                     '../')),
@@ -34,7 +34,7 @@ path_opts = [
 ]
 
 CONF = cfg.CONF
-CONF.register_opts(path_opts)
+CONF.register_opts(opts)
 
 
 def state_path_def(*args):
