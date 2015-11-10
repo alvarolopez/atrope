@@ -20,6 +20,7 @@ import pprint
 
 import dateutil.parser
 import dateutil.tz
+import OpenSSL
 from oslo_config import cfg
 from oslo_log import log
 import requests
@@ -111,7 +112,7 @@ class HepixImageListSource(source.BaseImageListSource):
 
         self.image_list = None
 
-        self.signers = None
+        self.signer = None
         self.verified = False
         self.trusted = False
         self.expired = None
@@ -132,7 +133,7 @@ class HepixImageListSource(source.BaseImageListSource):
     def fetch(self):
         if self.enabled and self.url:
             self.contents = self._fetch()
-            self.verified, self.signers, raw_list = self._verify()
+            self.verified, self.signer, raw_list = self._verify()
             try:
                 list_as_dict = json.loads(raw_list)
             except ValueError:
@@ -174,11 +175,11 @@ class HepixImageListSource(source.BaseImageListSource):
         """
         verifier = smime.SMIMEVerifier()
         try:
-            signers, raw_list = verifier.verify(self.contents)
+            signer, raw_list = verifier.verify(self.contents)
         except Exception:
             raise
         else:
-            return True, signers, raw_list
+            return True, signer, raw_list
 
     def _check_endorser(self):
         """Check the endorsers of an image list.
@@ -187,18 +188,20 @@ class HepixImageListSource(source.BaseImageListSource):
         """
 
         list_endorser = self.image_list.endorser
-
-        if self.endorser["dn"] != list_endorser.dn:
+        msg = None
+        if (self.signer.dn != list_endorser.dn or
+            self.signer.ca != list_endorser.ca):
+            msg = ("List '%s' signer != list endorser "
+                   "'%s' != '%s'" %
+                   (self.name, self.signer, list_endorser))
+        elif self.endorser["dn"] != list_endorser.dn:
             msg = ("List '%s' endorser is not trusted, DN mismatch "
                    "'%s' != '%s'" %
                    self.name, self.endorser["dn"], list_endorser.dn)
-            LOG.error(msg)
-            self.error = msg
-            return False
-
-        if self.endorser["ca"] != list_endorser.ca:
+        elif self.endorser["ca"] != list_endorser.ca:
             msg = ("List '%s' endorser CA is invalid '%s' != '%s'" %
                    self.name, self.endorser["ca"], list_endorser.ca)
+        if msg:
             LOG.error(msg)
             self.error = msg
             return False

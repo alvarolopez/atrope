@@ -38,3 +38,6 @@ class Endorser(object):
         self.dn = meta["hv:dn"]
         self.ca = meta["hv:ca"]
         self.email = meta["hv:email"]
+
+    def __str__(self):
+        return "<Endorser dn:%s, ca:%s>" % (self.dn, self.ca)

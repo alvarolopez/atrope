@@ -15,8 +15,10 @@
 # under the License.
 
 import os
+import subprocess
+import tempfile
 
-import M2Crypto
+import OpenSSL
 from oslo_config import cfg
 
 from atrope import exception
@@ -31,50 +33,51 @@ CONF = cfg.CONF
 CONF.register_opts(opts)
 
 
+class Signer(object):
+    def __init__(self, dn, ca):
+        self.dn = "/" + "/".join(["=".join(i) for i in dn.get_components()])
+        self.ca = "/" + "/".join(["=".join(i) for i in ca.get_components()])
+
+    def __str__(self):
+        return "<Signer dn:%s, ca:%s>" % (self.dn, self.ca)
+
+
 class SMIMEVerifier(object):
-    def __init__(self):
-        self._set_up_store()
-
-        self.smime = M2Crypto.SMIME.SMIME()
-        self.smime.set_x509_store(self.store)
-
-    def _set_up_store(self):
-        self.store = M2Crypto.X509.X509_Store()
-        for f in os.listdir(CONF.ca_path):
-            # TODO(aloga): Check here that we are actually loading anything
-            # so that we can raise a proper error. If we cannot load anything
-            # in the store we won't be able to verify the certificate, but
-            # the error will be just a "verify errro"
-            if f.endswith('.0') or f.endswith('.r0'):
-                self.store.load_info(os.path.join(CONF.ca_path, f))
-
     def verify(self, msg):
-        buf = M2Crypto.BIO.MemoryBuffer(msg)
-        try:
-            p7, data_bio = M2Crypto.SMIME.smime_load_pkcs7_bio(buf)
-        except M2Crypto.SMIME.SMIME_Error as e:
-            raise exception.SMIMEValidationError(err=e)
+        signer, verified_data = self._get_signer_cert_and_verify(msg)
+        if not signer:
+            raise exception.SMIMEValidationError(err="no certificates found")
+        issuer, signer = self._extract_signer_issuer_and_subject(signer)
+        return Signer(signer, issuer), verified_data
 
-        if data_bio is None:
-            raise exception.SMIMEValidationError(err='no data found')
+    def _extract_signer_issuer_and_subject(self, signer):
+        x509 = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM,
+                                               signer)
+        return x509.get_issuer(), x509.get_subject()
 
-        signers = p7.get0_signers(M2Crypto.X509.X509_Stack())
-        if len(signers) == 0:
-            raise exception.SMIMEValidationError(
-                err='no certificates found'
-            )
+    def _get_signer_cert_and_verify(self, data):
+        with tempfile.NamedTemporaryFile(mode="r", delete=True) as signer_file:
+            process = subprocess.Popen(["openssl",
+                                        "smime" ,
+                                        "-verify",
+                                        "-signer", signer_file.name,
+                                        "-CApath", CONF.ca_path],
+                                    stdin=subprocess.PIPE,
+                                    stdout=subprocess.PIPE,
+                                    stderr=subprocess.PIPE)
+            output, err = process.communicate(data)
+            retcode = process.poll()
+            if err is not None:
+                err = err.decode('utf-8')
 
-        signer = [(str(c.get_subject()), str(c.get_issuer())) for c in signers]
+            if retcode == 2:
+                raise exception.SMIMEValidationError(err=err)
+            elif retcode:
+                # NOTE(dmllr): Python 2.6 compatibility:
+                # CalledProcessError did not have output keyword argument
+                e = subprocess.CalledProcessError(retcode, 'openssl')
+                e.output = err
+                raise e
 
-        self.smime.set_x509_stack(signers)
-        try:
-            verified_data = self.smime.verify(p7, data_bio)
-        except (M2Crypto.SMIME.SMIME_Error, M2Crypto.SMIME.PKCS7_Error) as e:
-            raise exception.SMIMEValidationError(err=e)
-
-        orig_data = data_bio.read()
-        if orig_data != verified_data:
-            raise exception.SMIMEValidationError('verification failed: list '
-                                                 'contents do not match the '
-                                                 'output of SMIME.verify')
-        return signer, verified_data
+            signer = signer_file.read()
+        return signer, output
