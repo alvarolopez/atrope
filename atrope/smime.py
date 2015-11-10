@@ -53,15 +53,15 @@ class SMIMEVerifier(object):
         try:
             p7, data_bio = M2Crypto.SMIME.smime_load_pkcs7_bio(buf)
         except M2Crypto.SMIME.SMIME_Error as e:
-            raise exception.SMIMEValidationError(exception=e)
+            raise exception.SMIMEValidationError(err=e)
 
         if data_bio is None:
-            raise exception.SMIMEValidationError(exception='no data found')
+            raise exception.SMIMEValidationError(err='no data found')
 
         signers = p7.get0_signers(M2Crypto.X509.X509_Stack())
         if len(signers) == 0:
             raise exception.SMIMEValidationError(
-                exception='no certificates found'
+                err='no certificates found'
             )
 
         signer = [(str(c.get_subject()), str(c.get_issuer())) for c in signers]
@@ -70,7 +70,7 @@ class SMIMEVerifier(object):
         try:
             verified_data = self.smime.verify(p7, data_bio)
         except (M2Crypto.SMIME.SMIME_Error, M2Crypto.SMIME.PKCS7_Error) as e:
-            raise exception.SMIMEValidationError(exception=e)
+            raise exception.SMIMEValidationError(err=e)
 
         orig_data = data_bio.read()
         if orig_data != verified_data:

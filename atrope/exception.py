@@ -51,7 +51,7 @@ class CannotOpenFile(AtropeException):
 
 
 class SMIMEValidationError(AtropeException):
-    msg_fmt = "Could not validate SMIME message: %(exception)s"
+    msg_fmt = "Could not validate SMIME message: %(err)s"
 
 
 class ImageListDownloadFailed(AtropeException):
