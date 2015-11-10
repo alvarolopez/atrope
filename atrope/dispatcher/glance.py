@@ -13,7 +13,7 @@
 # under the License.
 
 import json
-import urlparse
+from six.moves.urllib.parse import urlparse
 
 import glanceclient
 from glanceclient import exc as glance_exc
