@@ -30,4 +30,4 @@ class Dispatcher(base.BaseDispatcher):
 
         In practise I do nothing, since I am the NOOP dispatcher.
         """
-        LOG.debug("Dispatching image (noop) %s" % image)
+        LOG.info("Dispatching image (noop) %s" % image)
