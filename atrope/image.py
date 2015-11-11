@@ -22,6 +22,7 @@ import requests
 import six
 
 from atrope import exception
+from atrope import ovf
 from atrope import utils
 
 LOG = log.getLogger(__name__)
@@ -43,6 +44,37 @@ class BaseImage(object):
 
         :param dest: destionation directory.
         """
+
+    def get_file(self, mode="rb"):
+        """Return a File object containing the downloaded file."""
+        return open(self.location, mode)
+
+    def get_kernel(self):
+        raise NotImplementedError()
+
+    def get_ramdisk(self):
+        raise NotImplementedError()
+
+    def get_disk(self):
+        """Return the format and a 'ro' File-like object containing the disk.
+
+        Images can be stored in containers like OVA, this method will return a
+        tuple (format, fd) being 'format' a string containing the image disk
+        format and 'fd' File-like object containing the original image disk as
+        extracted from the container.
+
+        We assume that containers only store one image disk. We scan the file
+        in reverse order, as OVF specification states that files can be
+        appended so as to update the OVF file.
+        """
+        if self.format.lower() != "ova":
+            return self.format, self.get_file()
+
+        ovf_file = ovf.get_ovf(self.location)
+
+        fmt, disk_filename = ovf.get_disk_name(ovf_file)
+        disk_fd = ovf.extract_file(self.location, disk_filename)
+        return fmt, disk_fd
 
     def verify_checksum(self, location=None):
         """Verify the image's checksum."""

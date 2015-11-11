@@ -62,6 +62,10 @@ class ImageDownloadFailed(AtropeException):
     msg_fmt = "Cannot get image, reason: (%(code)s) %(reason)s"
 
 
+class InvalidOVAFile(AtropeException):
+    msg_fmt = "Invalid OVA file, reason: %(reason)s"
+
+
 class InvalidImageList(AtropeException):
     msg_fmt = "Image list is not valid: %(reason)s"
 

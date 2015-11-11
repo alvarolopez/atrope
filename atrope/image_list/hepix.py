@@ -20,7 +20,6 @@ import pprint
 
 import dateutil.parser
 import dateutil.tz
-import OpenSSL
 from oslo_config import cfg
 from oslo_log import log
 import requests

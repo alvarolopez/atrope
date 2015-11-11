@@ -262,7 +262,7 @@ class Dispatcher(base.BaseDispatcher):
             "tags": ["atrope"],
             "architecture": image.arch,
             "disk_format": None,
-            "container_format": None,
+            "container_format": "bare",
             "os_distro": image.osname.lower(),
             "os_version": image.osversion,
             "visibility": "public" if is_public else "private",
@@ -277,10 +277,6 @@ class Dispatcher(base.BaseDispatcher):
             if k in metadata:
                 raise exception.MetadataOverwriteNotSupported(key=k)
             metadata[k] = v
-
-        smth_format = image.format.lower()
-        (metadata["container_format"],
-         metadata["disk_format"]) = self._guess_formats(smth_format)
 
         kwargs = {
             "filters": {
@@ -308,13 +304,15 @@ class Dispatcher(base.BaseDispatcher):
                 self.client.images.delete(glance_image.id)
                 glance_image = None
 
+        metadata["disk_format"], image_fd = image.get_disk()
+
         if not glance_image:
             LOG.debug("Creating image '%s'.", image.identifier)
             glance_image = self.client.images.create(**metadata)
 
         if glance_image.status == "queued":
             LOG.debug("Uploading image '%s'.", image.identifier)
-            self._upload(glance_image.id, image)
+            self._upload(glance_image.id, image_fd)
 
         if glance_image.status == "active":
             LOG.info("Image '%s' stored in glance as '%s'.",
@@ -353,9 +351,8 @@ class Dispatcher(base.BaseDispatcher):
 
         LOG.info("Sync terminated for image list '%s'", image_list.name)
 
-    def _upload(self, id, image):
-        fd = open(image.location, "rb")
-        self.client.images.upload(id, fd)
+    def _upload(self, id, image_fd):
+        self.client.images.upload(id, image_fd)
 
     def _guess_formats(self, smth_format):
         if smth_format == "ova":
