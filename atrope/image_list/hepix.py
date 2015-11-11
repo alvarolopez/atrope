@@ -227,7 +227,7 @@ class HepixImageListSource(source.BaseImageListSource):
         if self.error is not None:
             d["error"] = self.error
         if self.contents is not None and contents:
-            d["contents"] = pprint.pformat(self.d_contents)
+            d["contents"] = pprint.pformat(self.contents)
         images = [str(img.identifier) for img in self.get_images()]
         if images:
             d["images"] = images
