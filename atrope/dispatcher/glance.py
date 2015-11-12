@@ -254,7 +254,7 @@ class Dispatcher(base.BaseDispatcher):
         If metadata is provided in the kwargs it will be associated with
         the image.
         """
-        LOG.info("Glance dispatching '%s'", image)
+        LOG.info("Glance dispatching '%s'", image.identifier)
 
         # TODO(aloga): missing hypervisor type, need list spec first
         metadata = {
