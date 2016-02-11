@@ -17,13 +17,32 @@
 import abc
 import os.path
 
+from oslo_config import cfg
 from oslo_log import log
 import requests
+import requests.certs
 import six
 
 from atrope import exception
 from atrope import ovf
+from atrope import paths
 from atrope import utils
+
+opts = [
+    cfg.StrOpt('download_ca_file',
+               default=paths.state_path_def('atrope-ca-bundle.pem'),
+               help='Atrope will build a CA bundle for verifying the '
+                    'HTTP servers when it is downloading the image, '
+                    'concatenating the default OS CA bundle and the '
+                    'CAs present in the $ca_path directory. This '
+                    'is done as there may be certificates signed by '
+                    'CAs that are trusted by the provider, but untrusted '
+                    'by the default bundle and we need to trust both.'),
+]
+
+CONF = cfg.CONF
+CONF.register_opts(opts)
+CONF.import_opt("ca_path", "atrope.smime")
 
 LOG = log.getLogger(__name__)
 
@@ -122,6 +141,10 @@ class HepixImage(BaseImage):
 
         image_dict = image_info.get("hv:image", {})
 
+        utils.ensure_ca_bundle(CONF.download_ca_file,
+                               [requests.certs.where()],
+                               CONF.ca_path)
+
         for i in self.required_fields:
             value = image_dict.get(i, None)
             if value is None:
@@ -136,7 +159,8 @@ class HepixImage(BaseImage):
                  self.identifier, self.uri, location)
         with open(location, 'wb') as f:
             try:
-                response = requests.get(self.uri, stream=True)
+                response = requests.get(self.uri, stream=True,
+                                        verify=CONF.download_ca_file)
             except Exception as e:
                 LOG.error(e)
                 raise exception.ImageDownloadFailed(code=e.errno,

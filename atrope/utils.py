@@ -127,3 +127,22 @@ def yn_question(msg="Enabled", default=True):
     else:
         print("Please enter one of 'Y' or 'N'.")
         return yn_question()
+
+
+def run_once(f):
+    def wrapper(*args, **kwargs):
+        if not wrapper.has_run:
+            wrapper.has_run = True
+            return f(*args, **kwargs)
+    wrapper.has_run = False
+    return wrapper
+
+
+@run_once
+def ensure_ca_bundle(dest, ca_files, ca_dir):
+    ca_files.extend([os.path.join(ca_dir, f) for f in os.listdir(ca_dir)
+                     if f.endswith(".pem")])
+    with open(dest, "w") as f:
+        for cafile in ca_files:
+            with open(cafile) as ca:
+                f.write(ca.read())

@@ -26,7 +26,8 @@ import atrope.smime
 
 def list_opts():
     return [
-        ('DEFAULT', itertools.chain(atrope.paths.opts,
+        ('DEFAULT', itertools.chain(atrope.image.opts,
+                                    atrope.paths.opts,
                                     atrope.smime.opts)
          ),
         ('cache', atrope.cache.opts),
