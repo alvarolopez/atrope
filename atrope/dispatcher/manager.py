@@ -13,6 +13,7 @@
 # under the License.
 
 from oslo_config import cfg
+from oslo_log import log
 
 from atrope import importutils
 
@@ -29,6 +30,8 @@ opts = [
 
 CONF = cfg.CONF
 CONF.register_opts(opts, group="dispatchers")
+
+LOG = log.getLogger(__name__)
 
 DISPATCHER_NAMESPACE = 'atrope.dispatcher'
 
@@ -79,4 +82,9 @@ class DispatcherManager(object):
     def dispatch_image(self, image_name, image, is_public, **kwargs):
         """Dispatch a single image to each of the dispatchers."""
         for dispatcher in self.dispatchers:
-            dispatcher.dispatch(image_name, image, is_public, **kwargs)
+            try:
+                dispatcher.dispatch(image_name, image, is_public, **kwargs)
+            except Exception as e:
+                LOG.exception("An exception has occured when dispatching "
+                              "image %s" % image.identifier)
+                LOG.exception(e)
