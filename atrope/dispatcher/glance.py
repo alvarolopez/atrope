@@ -323,6 +323,7 @@ class Dispatcher(base.BaseDispatcher):
             if tenant is not None:
                 try:
                     self.client.image_members.create(glance_image.id, tenant)
+		    self.client.image_members.update(glance_image.id, tenant, 'accepted')
                 except glance_exc.HTTPConflict:
                     pass
                 LOG.info("Image '%s' associated with VO '%s', tenant '%s'",
