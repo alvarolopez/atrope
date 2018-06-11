@@ -70,7 +70,6 @@ class CacheManager(object):
                 LOG.info("List '%s' is disabled, images will be "
                          "marked for removal", l.name)
 
-
         for root, dirs, files in os.walk(self.path):
             if root not in valid_paths:
                 invalid_paths.append(root)

@@ -25,6 +25,7 @@ SPECS = {
     'https://people.gnome.org/~markmc/qcow-image-format.html': 'qcow',
 }
 
+
 def _get_tarfile(ova):
     if not tarfile.is_tarfile(ova):
         raise exception.CannotOpenFile(reason="not a valid 'tar' file")

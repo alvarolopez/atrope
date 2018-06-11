@@ -189,7 +189,7 @@ class HepixImageListSource(source.BaseImageListSource):
         list_endorser = self.image_list.endorser
         msg = None
         if (self.signer.dn != list_endorser.dn or
-            self.signer.ca != list_endorser.ca):
+                self.signer.ca != list_endorser.ca):
             msg = ("List '%s' signer != list endorser "
                    "'%s' != '%s'" %
                    (self.name, self.signer, list_endorser))

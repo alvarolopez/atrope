@@ -17,12 +17,13 @@
 import itertools
 
 import atrope.cache
-import atrope.dispatcher.manager
 import atrope.dispatcher.glance
+import atrope.dispatcher.manager
 import atrope.image_list.hepix
 import atrope.image_list.manager
 import atrope.paths
 import atrope.smime
+
 
 def list_opts():
     return [

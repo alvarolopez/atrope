@@ -14,7 +14,6 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import os
 import subprocess
 import tempfile
 
@@ -58,13 +57,13 @@ class SMIMEVerifier(object):
     def _get_signer_cert_and_verify(self, data):
         with tempfile.NamedTemporaryFile(mode="r", delete=True) as signer_file:
             process = subprocess.Popen(["openssl",
-                                        "smime" ,
+                                        "smime",
                                         "-verify",
                                         "-signer", signer_file.name,
                                         "-CApath", CONF.ca_path],
-                                    stdin=subprocess.PIPE,
-                                    stdout=subprocess.PIPE,
-                                    stderr=subprocess.PIPE)
+                                       stdin=subprocess.PIPE,
+                                       stdout=subprocess.PIPE,
+                                       stderr=subprocess.PIPE)
             output, err = process.communicate(data)
             retcode = process.poll()
             if err is not None:

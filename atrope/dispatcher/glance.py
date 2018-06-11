@@ -31,7 +31,7 @@ opts = [
                     'lists private to VOs'),
 ]
 
-CFG_GROUP="glance"
+CFG_GROUP = "glance"
 CONF = cfg.CONF
 CONF.import_opt("prefix", "atrope.dispatcher.base", group="dispatchers")
 CONF.register_opts(opts, group="glance")
@@ -106,7 +106,6 @@ class Dispatcher(base.BaseDispatcher):
         session = loading.load_session_from_conf_options(CONF, CFG_GROUP,
                                                          auth=auth_plugin)
         return glanceclient.client.Client(2, session=session)
-
 
     def _get_vo_tenant_mapping(self, vo):
         tenant = self.json_mapping.get(vo, {}).get("tenant", None)
@@ -187,14 +186,18 @@ class Dispatcher(base.BaseDispatcher):
             tenant = self._get_vo_tenant_mapping(metadata["vo"])
             if tenant is not None:
                 try:
-                    self.client.images.update(glance_image.id, visibility="shared")
-                    self.client.image_members.create(glance_image.id, tenant)
+                    self.client.images.update(glance_image.id,
+                                              visibility="shared")
+                    self.client.image_members.create(glance_image.id,
+                                                     tenant)
                 except glance_exc.HTTPConflict:
-                    LOG.debug("Image '%s' already associated with VO '%s', tenant '%s'",
-                         image.identifier, metadata["vo"], tenant)
+                    LOG.debug("Image '%s' already associated with VO '%s', "
+                              "tenant '%s'",
+                              image.identifier, metadata["vo"], tenant)
                 finally:
                     client = self._get_glance_client(project_id=tenant)
-                    client.image_members.update(glance_image.id, tenant, 'accepted')
+                    client.image_members.update(glance_image.id,
+                                                tenant, 'accepted')
 
                     LOG.info("Image '%s' associated with VO '%s', tenant '%s'",
                              image.identifier, metadata["vo"], tenant)
