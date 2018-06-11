@@ -187,6 +187,7 @@ class Dispatcher(base.BaseDispatcher):
             tenant = self._get_vo_tenant_mapping(metadata["vo"])
             if tenant is not None:
                 try:
+                    self.client.images.update(glance_image.id, visibility="shared")
                     self.client.image_members.create(glance_image.id, tenant)
                     client = self._get_glance_client(tenant=tenant)
                     client.image_members.update(glance_image.id, tenant, 'accepted')
