@@ -111,6 +111,8 @@ class BaseImage(object):
                 expected=self.sha512,
                 obtained=sha512.hexdigest()
             )
+        LOG.info("Image '%s' present in '%s', checksum OK",
+                 self.identifier, location)
         self.verified = True
 
 
@@ -205,8 +207,5 @@ class HepixImage(BaseImage):
                             "downloading again",
                             self.identifier, location)
                 self._download(location)
-            else:
-                LOG.info("Image '%s' present in '%s', checksum OK",
-                         self.identifier, location)
 
         self.location = location
