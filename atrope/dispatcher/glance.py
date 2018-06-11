@@ -169,6 +169,11 @@ class Dispatcher(base.BaseDispatcher):
                 glance_image = None
 
         metadata["disk_format"], image_fd = image.get_disk()
+        metadata["disk_format"].lower()
+        if metadata["disk_format"] not in ['ami', 'ari', 'aki', 'vhd',
+                                           'vhdx', 'vmdk', 'raw', 'qcow2',
+                                           'vdi', 'iso', 'ploop', 'root-tar']:
+            metadata["disk_format"] = "raw"
 
         if not glance_image:
             LOG.debug("Creating image '%s'.", image.identifier)
