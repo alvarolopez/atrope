@@ -3,7 +3,7 @@ pbr>=1.9
 PyOpenSSL
 lxml==3.3.0
 
-oslo.config
+oslo.config>=2.3.0 # Apache-2.0
 oslo.log
 
 six>=1.9.0
@@ -11,4 +11,6 @@ PyYAML
 requests
 prettytable
 dateutils
-python-glanceclient
+
+python-keystoneclient!=1.8.0,<3.0.0,>=1.6.0
+python-glanceclient>=0.18.0
