@@ -1,6 +1,7 @@
+pbr>=1.9
+
 PyOpenSSL
 lxml==3.3.0
-pbr>=0.6,!=0.7,<1.0
 
 oslo.config
 oslo.log
