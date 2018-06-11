@@ -97,6 +97,8 @@ class BaseImage(object):
 
     def verify_checksum(self, location=None):
         """Verify the image's checksum."""
+        LOG.info("Image '%s' present in '%s', verifying checksum",
+                 self.identifier, location)
 
         location = location or self.location
         if location is None:
@@ -199,12 +201,12 @@ class HepixImage(BaseImage):
             try:
                 self.verify_checksum(location=location)
             except exception.ImageVerificationFailed:
-                LOG.warning("Image '%s' found in '%s' is not valid, "
+                LOG.warning("Image '%s' present in '%s' is not valid, "
                             "downloading again",
                             self.identifier, location)
                 self._download(location)
             else:
-                LOG.info("Image '%s' already downloaded into '%s'",
+                LOG.info("Image '%s' present in '%s', checksum OK",
                          self.identifier, location)
 
         self.location = location
