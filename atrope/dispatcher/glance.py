@@ -96,10 +96,10 @@ class Dispatcher(base.BaseDispatcher):
                                                       auth=auth_plugin)
         return ks_client_v3.Client(session=sess)
 
-    def _get_glance_client(self, tenant=None):
-        if tenant:
+    def _get_glance_client(self, project_id=None):
+        if project_id:
             auth_plugin = loading.load_auth_from_conf_options(
-                CONF, CFG_GROUP, project_name=tenant)
+                CONF, CFG_GROUP, project_id=project_id)
         else:
             auth_plugin = loading.load_auth_from_conf_options(CONF, CFG_GROUP)
 
@@ -189,12 +189,15 @@ class Dispatcher(base.BaseDispatcher):
                 try:
                     self.client.images.update(glance_image.id, visibility="shared")
                     self.client.image_members.create(glance_image.id, tenant)
-                    client = self._get_glance_client(tenant=tenant)
-                    client.image_members.update(glance_image.id, tenant, 'accepted')
                 except glance_exc.HTTPConflict:
-                    pass
-                LOG.info("Image '%s' associated with VO '%s', tenant '%s'",
+                    LOG.debug("Image '%s' already associated with VO '%s', tenant '%s'",
                          image.identifier, metadata["vo"], tenant)
+                finally:
+                    client = self._get_glance_client(project_id=tenant)
+                    client.image_members.update(glance_image.id, tenant, 'accepted')
+
+                    LOG.info("Image '%s' associated with VO '%s', tenant '%s'",
+                             image.identifier, metadata["vo"], tenant)
             else:
                 LOG.error("Image '%s' is associated with VO '%s' but no "
                           "tenant mapping could be found!",
