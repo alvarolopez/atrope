@@ -157,6 +157,8 @@ class HepixImage(BaseImage):
 
             attr = self.field_map.get(i)
             setattr(self, attr, value)
+        # add everything from hepix as 'extra', so it can be queried in glance
+        self.appliance_attributes = image_dict
 
     def _download(self, location):
         LOG.info("Downloading image '%s' from '%s' into '%s'",
