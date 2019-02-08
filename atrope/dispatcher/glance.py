@@ -139,7 +139,7 @@ class Dispatcher(base.BaseDispatcher):
             "sha512": image.sha512,
         }
 
-        appliance_attrs = getattr(image, appliance_attributes)
+        appliance_attrs = getattr(image, "appliance_attributes")
         if appliance_attrs:
             metadata['APPLIANCE_ATTRIBUTES'] = json.dumps(appliance_attrs)
 
