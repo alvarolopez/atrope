@@ -67,6 +67,7 @@ class DispatcherManager(object):
         LOG.info("Preparing to dispatch list '%s''" % image_list.name)
 
         kwargs.setdefault("image_list", image_list.name)
+        kwargs.setdefault("project", image_list.project)
 
         is_public = False if image_list.token else True
 
