@@ -8,6 +8,15 @@ cache or with an image catalog (such as OpenStack glance).
 * Source: https://github.com/alvarolopez/atrope
 * Bugs: https://github.com/alvarolopez/atrope/issues
 
+## Upgrade notes
+
+## v2.0.0
+
+- Support for Python3 only.
+
+- The support for the `voms.json` file has been dropped, please use the
+  `project` property instead.
+
 ## Features
 
 ### Image Sources

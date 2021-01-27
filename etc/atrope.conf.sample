@@ -12,7 +12,7 @@
 #download_ca_file = $state_path/atrope-ca-bundle.pem
 
 # Directory where the atrope python module is installed (string value)
-#basedir = /home/alvaro/w/rep/fedcloud/atrope
+#basedir = /home/alvaro/w/rep/FEDCLOUD/atrope
 
 # Top-level directory for maintaining atrope's state (string value)
 #state_path = $basedir
