@@ -14,7 +14,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import os.path
+import pathlib
 
 from oslo_config import cfg
 from oslo_log import log
@@ -37,53 +37,58 @@ LOG = log.getLogger(__name__)
 
 class CacheManager(object):
     def __init__(self):
-        self.path = os.path.abspath(CONF.cache.path)
-        utils.makedirs(self.path)
+        self.path = pathlib.Path(CONF.cache.path)
+        utils.makedirs(self.path)  # FIXME
+        self._valid_paths = [self.path]
+
+    def _download_list(self, lst):
+        LOG.info(f"Syncing list with ID '{lst.name}'")
+        if lst.enabled:
+            LOG.info(f"List '{lst.name}' is enabled, checking if downloaded "
+                     "images are valid")
+            basedir = self.path / lst.name
+            imgdir = basedir / 'images'
+            if lst.trusted and lst.verified and not lst.expired:
+                utils.makedirs(imgdir)  # FIXME(aloga) pathlib
+                self._valid_paths.append(basedir)
+                self._valid_paths.append(imgdir)
+                for img in lst.get_subscribed_images():
+                    try:
+                        img.download(imgdir)
+                    except (exception.ImageVerificationFailed,
+                            exception.ImageDownloadFailed):
+                        pass
+                    else:
+                        pass
+                        self._valid_paths.append(pathlib.Path(img.location))
+        else:
+            LOG.info(f"List '{lst.name}' is disabled, images will be "
+                     "marked for removal")
+
+    def _clean_invalid(self, base):
+        LOG.info(f"Checking for invalid files in cache dir ({base}).")
+        invalid_paths = []
+
+        for f in base.glob("**/*"):
+            if f not in self._valid_paths:
+                invalid_paths.append(f)
+
+        if not invalid_paths:
+            LOG.info(f"No invalid files in cache dir ({base}).")
+
+        for i in invalid_paths:
+            LOG.warning(f"Removing '{i}' from cache.")
+            utils.rm(i)  # FIXME
+
+    def sync_one(self, lst):
+        self._download_list(lst)
+        self._clean_invalid(self.path / lst.name)
 
     def sync(self, lists):
         LOG.info("Starting cache sync")
-        valid_paths = [self.path]
-        invalid_paths = []
 
         for lst in lists.values():
-            LOG.info("Syncing list with ID '%s'", lst.name)
-            if lst.enabled:
-                LOG.info("List '%s' is enabled, checking if downloaded images "
-                         "are valid", lst.name)
-                basedir = os.path.join(self.path, lst.name)
-                valid_paths.append(basedir)
-                imgdir = os.path.join(self.path, lst.name, 'images')
-                if lst.trusted and lst.verified and not lst.expired:
-                    utils.makedirs(imgdir)
-                    valid_paths.append(imgdir)
-                    for img in lst.get_subscribed_images():
-                        try:
-                            img.download(imgdir)
-                        except (exception.ImageVerificationFailed,
-                                exception.ImageDownloadFailed):
-                            # FIXME(aloga): we should notify about this in the
-                            # cmd line.
-                            pass
-                        else:
-                            valid_paths.append(img.location)
-            else:
-                LOG.info("List '%s' is disabled, images will be "
-                         "marked for removal", lst.name)
+            self.sync_one(lst)
+        self._clean_invalid(self.path)
 
-        for root, dirs, files in os.walk(self.path):
-            if root not in valid_paths:
-                invalid_paths.append(root)
-            for i in files + dirs:
-                i = os.path.join(root, i)
-                if i not in valid_paths:
-                    invalid_paths.append(i)
-
-        if invalid_paths:
-            LOG.info("Marked %s as invalid cache files/dirs.", invalid_paths)
-        else:
-            LOG.info("No invalid files in cache dir.")
-
-        for i in invalid_paths:
-            LOG.warning("Removing '%s' from cache directory.", i)
-            utils.rm(i)
         LOG.info("Sync completed")

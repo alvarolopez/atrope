@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
 
+# Copyright 2021 Alvaro Lopez Garcia
+#
 # Licensed under the Apache License, Version 2.0 (the "License"); you may
 # not use this file except in compliance with the License. You may obtain
 # a copy of the License at
 #
-#      http://www.apache.org/licenses/LICENSE-2.0
+# http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
@@ -12,22 +14,14 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import sys
-
-from oslo_config import cfg
-from oslo_log import log
-
-from atrope.cmd import commands
-import atrope.config
-
-CONF = cfg.CONF
+import atrope
+from atrope.cmd import base
 
 
-def main():
-    atrope.config.parse_args(sys.argv)
-    log.setup(cfg.CONF, 'atrope')
-    commands.CommandManager().execute()
+class CommandVersion(base.BaseCommand):
+    def __init__(self, parser, name="version",
+                 cmd_help="Show verison and exit."):
+        super(CommandVersion, self).__init__(parser, name, cmd_help)
 
-
-if __name__ == "__main__":
-    main()
+    def run(self):
+        print(atrope.__version__)
