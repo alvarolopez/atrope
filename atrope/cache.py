@@ -45,18 +45,18 @@ class CacheManager(object):
         valid_paths = [self.path]
         invalid_paths = []
 
-        for l in lists.values():
-            LOG.info("Syncing list with ID '%s'", l.name)
-            if l.enabled:
+        for lst in lists.values():
+            LOG.info("Syncing list with ID '%s'", lst.name)
+            if lst.enabled:
                 LOG.info("List '%s' is enabled, checking if downloaded images "
-                         "are valid", l.name)
-                basedir = os.path.join(self.path, l.name)
+                         "are valid", lst.name)
+                basedir = os.path.join(self.path, lst.name)
                 valid_paths.append(basedir)
-                imgdir = os.path.join(self.path, l.name, 'images')
-                if l.trusted and l.verified and not l.expired:
+                imgdir = os.path.join(self.path, lst.name, 'images')
+                if lst.trusted and lst.verified and not lst.expired:
                     utils.makedirs(imgdir)
                     valid_paths.append(imgdir)
-                    for img in l.get_subscribed_images():
+                    for img in lst.get_subscribed_images():
                         try:
                             img.download(imgdir)
                         except (exception.ImageVerificationFailed,
@@ -68,7 +68,7 @@ class CacheManager(object):
                             valid_paths.append(img.location)
             else:
                 LOG.info("List '%s' is disabled, images will be "
-                         "marked for removal", l.name)
+                         "marked for removal", lst.name)
 
         for root, dirs, files in os.walk(self.path):
             if root not in valid_paths:

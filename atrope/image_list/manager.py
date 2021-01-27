@@ -55,20 +55,20 @@ class BaseImageListManager(object):
     def write_image_list_sources(self):
         """Write image sources to disk."""
 
-    def _fetch_and_verify(self, l):
+    def _fetch_and_verify(self, lst):
         """Fetch and verify an image list.
 
         If there are errors loading the list the appropriate attributes won't
         be set, so there is no need to fail here, but rather return the list.
         """
         try:
-            l.fetch()
+            lst.fetch()
         except exception.AtropeException as e:
             LOG.error("Error loading list '%s' from '%s', reason: %s",
-                      l.name, l.url, e.message)
+                      lst.name, lst.url, e)
             LOG.debug("Exception while downloading list '%s'",
-                      l.name, exc_info=e)
-        return l
+                      lst.name, exc_info=e)
+        return lst
 
     def add_image_list_source(self, image_list, force=False):
         """Add an image source to the loaded sources."""
@@ -79,17 +79,17 @@ class BaseImageListManager(object):
 
     def fetch_list(self, image_list):
         """Fetch (and verify) an individual list."""
-        l = self.lists.get(image_list)
-        if l is None:
+        lst = self.lists.get(image_list)
+        if lst is None:
             raise exception.InvalidImageList(reason="not found in config")
-        return self._fetch_and_verify(l)
+        return self._fetch_and_verify(lst)
 
     def fetch_lists(self):
         """Fetch (and verify) all the configured lists."""
         all_lists = []
-        for l in self.lists.values():
-            l = self._fetch_and_verify(l)
-            all_lists.append(l)
+        for lst in self.lists.values():
+            lst = self._fetch_and_verify(lst)
+            all_lists.append(lst)
 
         return all_lists
 
@@ -103,8 +103,8 @@ class BaseImageListManager(object):
         else:
             fn = self.dispatcher.dispatch_list
 
-        for l in self.lists.values():
-            fn(l)
+        for lst in self.lists.values():
+            fn(lst)
 
 
 class YamlImageListManager(BaseImageListManager):
@@ -121,20 +121,20 @@ class YamlImageListManager(BaseImageListManager):
             raise exception.CannotOpenFile(file=CONF.sources.hepix_sources,
                                            errno=e.errno)
 
-        for name, list_meta in image_lists.iteritems():
-            l = atrope.image_list.hepix.HepixImageListSource(
+        for name, list_meta in image_lists.items():
+            lst = atrope.image_list.hepix.HepixImageListSource(
                 name,
                 url=list_meta.pop("url", ""),
                 enabled=list_meta.pop("enabled", True),
                 subscribed_images=list_meta.pop("images", []),
                 prefix=list_meta.pop("prefix", ""),
                 **list_meta)
-            self.lists[name] = l
+            self.lists[name] = lst
 
     def write_image_list_sources(self):
         """Write images into YAML file."""
         lists = {}
-        for name, image_list in self.lists.iteritems():
+        for name, image_list in self.lists.items():
             lists[name] = {"url": image_list.url,
                            "enabled": image_list.enabled,
                            "endorser": image_list.endorser,

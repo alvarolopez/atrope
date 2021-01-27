@@ -143,7 +143,7 @@ class Dispatcher(base.BaseDispatcher):
         if appliance_attrs:
             metadata['APPLIANCE_ATTRIBUTES'] = json.dumps(appliance_attrs)
 
-        for k, v in kwargs.iteritems():
+        for k, v in kwargs.items():
             if k in metadata:
                 raise exception.MetadataOverwriteNotSupported(key=k)
             metadata[k] = v

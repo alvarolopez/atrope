@@ -35,6 +35,7 @@ def add_command_parsers(subparsers):
     CommandImageListCache(subparsers)
     CommandDispatch(subparsers)
 
+
 command_opt = cfg.SubCommandOpt('command',
                                 title='Commands',
                                 help='Show available commands.',
@@ -205,7 +206,7 @@ class CommandImageListAdd(Command):
         force = CONF.command.force
         endorser_dn = CONF.command.endorser_dn
         endorser_ca = CONF.command.endorser_ca
-        if (endorser_dn is "") == (endorser_ca is ""):
+        if (endorser_dn == "") == (endorser_ca == ""):
             if CONF.command.endorser_dn:
                 endorser = {"dn": endorser_dn,
                             "ca": endorser_ca}
@@ -270,10 +271,10 @@ class CommandImageListIndex(Command):
         # TODO(aloga): wrap the fields, since the output is huge
         fields = ["name", "url", "enabled", "endorser"]
         objs = []
-        for l in manager.lists.values():
+        for lst in manager.lists.values():
             d = {}
             for f in fields:
-                d[f] = getattr(l, f)
+                d[f] = getattr(lst, f)
             objs.append(d)
         utils.print_list(objs, fields)
 
@@ -302,8 +303,8 @@ class CommandImageListFetch(Command):
         else:
             lists = manager.fetch_lists()
 
-        for l in lists:
-            l.print_list(contents=CONF.command.contents)
+        for lst in lists:
+            lst.print_list(contents=CONF.command.contents)
 
 
 class CommandImageListCache(Command):

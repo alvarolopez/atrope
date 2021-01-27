@@ -34,11 +34,17 @@ CONF.register_opts(opts)
 
 class Signer(object):
     def __init__(self, dn, ca):
-        self.dn = "/" + "/".join(["=".join(i) for i in dn.get_components()])
-        self.ca = "/" + "/".join(["=".join(i) for i in ca.get_components()])
+        aux = [(i.decode("utf-8"), j.decode("utf-8"))
+               for i, j in dn.get_components()]
+        aux = "/".join(["=".join(i) for i in aux])
+        self.dn = f"/{aux}"
+        aux = [(i.decode("utf-8"), j.decode("utf-8"))
+               for i, j in ca.get_components()]
+        aux = "/".join(["=".join(i) for i in aux])
+        self.ca = f"/{aux}"
 
     def __str__(self):
-        return "<Signer dn:%s, ca:%s>" % (self.dn, self.ca)
+        return f"<Signer dn:{self.dn}, ca:{self.ca}>"
 
 
 class SMIMEVerifier(object):
