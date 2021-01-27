@@ -15,6 +15,7 @@
 from oslo_config import cfg
 from oslo_log import log
 
+from atrope import exception
 from atrope import importutils
 
 opts = [
@@ -48,9 +49,16 @@ class DispatcherManager(object):
 
         This method will dispatch all the images associated with the image
         list. Afterwards it will remove any image associated to that image list
-        that was not set for dispatch.
+        that was not set for dispatch (i.e. it will remove old images).
         """
         self.dispatch_list(image_list, **kwargs)
+        self.sync_list(image_list)
+
+    def sync_list(self, image_list):
+        """Sync a list after dispatch.
+
+        Remove old images that were not set for dispach.
+        """
         for dispatcher in self.dispatchers:
             dispatcher.sync(image_list)
 
@@ -75,7 +83,14 @@ class DispatcherManager(object):
             if image_list.image_list.vo is not None:
                 kwargs["vo"] = image_list.image_list.vo
 
-        for image in image_list.get_valid_subscribed_images():
+        try:
+            images = image_list.get_valid_subscribed_images()
+        except exception.ImageListNotFetched:
+            LOG.warning(f"Image list {image_list.name} has not been fetched "
+                        "skipping dispatch.")
+            images = []
+
+        for image in images:
             image_name = ("%(global prefix)s%(list prefix)s%(image name)s" %
                           {"global prefix": CONF.dispatchers.prefix,
                            "list prefix": image_list.prefix,
