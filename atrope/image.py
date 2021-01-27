@@ -170,7 +170,7 @@ class HepixImage(BaseImage):
             except Exception as e:
                 LOG.error(e)
                 raise exception.ImageDownloadFailed(code=e.errno,
-                                                    reason=e.message)
+                                                    reason=e)
 
             if not response.ok:
                 LOG.error("Cannot download image: (%s) %s",
