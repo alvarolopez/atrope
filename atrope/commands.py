@@ -18,6 +18,7 @@ from __future__ import print_function
 
 import sys
 
+import atrope
 from atrope import exception
 import atrope.image_list.manager
 from atrope import utils
@@ -34,6 +35,7 @@ def add_command_parsers(subparsers):
     CommandImageListFetch(subparsers)
     CommandImageListCache(subparsers)
     CommandDispatch(subparsers)
+    CommandVersion(subparsers)
 
 
 command_opt = cfg.SubCommandOpt('command',
@@ -350,6 +352,15 @@ class CommandDispatch(Command):
         manager = atrope.image_list.manager.YamlImageListManager()
         manager.sync_cache()
         manager.dispatch(CONF.command.sync)
+
+
+class CommandVersion(Command):
+    def __init__(self, parser, name="version",
+                 cmd_help="Show verison and exit."):
+        super(CommandVersion, self).__init__(parser, name, cmd_help)
+
+    def run(self):
+        print(atrope.__version__)
 
 
 class CommandManager(object):
