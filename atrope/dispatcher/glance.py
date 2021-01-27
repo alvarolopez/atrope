@@ -13,6 +13,7 @@
 # under the License.
 
 import json
+import pathlib
 
 import glanceclient.client
 from glanceclient import exc as glance_exc
@@ -75,14 +76,18 @@ class Dispatcher(base.BaseDispatcher):
         self.client = self._get_glance_client()
         self.ks_client = self._get_ks_client()
 
-        try:
-            self.json_mapping = json.loads(
-                open(CONF.glance.mapping_file).read())
-        except ValueError:
-            raise exception.GlanceInvalidMappingFIle(
-                file=CONF.glance.mapping_file,
-                reason="Bad JSON."
-            )
+        json_file = pathlib.Path(CONF.glance.mapping_file)
+        if json_file.exists():
+            try:
+                self.json_mapping = json.loads(
+                    open(CONF.glance.mapping_file).read())
+            except ValueError:
+                raise exception.GlanceInvalidMappingFIle(
+                    file=CONF.glance.mapping_file,
+                    reason="Bad JSON."
+                )
+        else:
+            self.json_mapping = {}
 
         # Format is not defined in the spec. What is format? Maybe it is the
         # container format? Or is it the image format? Try to do some ugly
