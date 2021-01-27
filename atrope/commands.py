@@ -100,6 +100,14 @@ class CommandImageListAdd(Command):
                                  help="If set images names will be prefixed "
                                       "with this.")
 
+        self.parser.add_argument("-P",
+                                 "--project",
+                                 dest="project",
+                                 metavar="PROJECT",
+                                 default="",
+                                 help="OpenStack project to which these "
+                                      "images will be associated.")
+
         self.parser.add_argument("-f",
                                  "--force",
                                  dest="force",
@@ -121,7 +129,7 @@ class CommandImageListAdd(Command):
                            action="store_false",
                            help="Add list as disabled")
 
-    def _get_values(self, url, token, prefix, enabled, endorser):
+    def _get_values(self, url, token, prefix, enabled, endorser, project):
         def get_endorser(default={}):
             print("Enter endorser details.")
             dn = input("\tEndorser DN [%s]: " %
@@ -159,7 +167,7 @@ class CommandImageListAdd(Command):
             return ret
 
         def print_image_list(identifier, url, token, prefix, enabled,
-                             endorser, subscribed_images):
+                             endorser, subscribed_images, project):
             d = {
                 "identifier": identifier,
                 "url": url,
@@ -169,6 +177,7 @@ class CommandImageListAdd(Command):
                 "endorser dn": endorser.get("dn"),
                 "endorser ca": endorser.get("ca"),
                 "subscribed images": subscribed_images,
+                "project": project,
             }
             utils.print_dict(d)
 
@@ -183,10 +192,12 @@ class CommandImageListAdd(Command):
 
             prefix = get_str("prefix", default=prefix)
 
+            project = get_str("project", default="")
+
             subscribed_images = get_list("subscribed images")
 
             print_image_list(identifier, url, token, prefix, enabled,
-                             endorser, subscribed_images)
+                             endorser, subscribed_images, project)
             msg = "Is the information above correct?"
             correct = utils.yn_question(msg=msg)
             if correct:
@@ -194,7 +205,7 @@ class CommandImageListAdd(Command):
             print("\nOK, lets try again")
 
         return (identifier, url, enabled, endorser,
-                token, prefix, subscribed_images)
+                token, prefix, subscribed_images, project)
 
     def run(self):
         identifier = CONF.command.list_id
@@ -205,6 +216,7 @@ class CommandImageListAdd(Command):
         force = CONF.command.force
         endorser_dn = CONF.command.endorser_dn
         endorser_ca = CONF.command.endorser_ca
+        project = CONF.command.project
         if (endorser_dn is "") == (endorser_ca is ""):
             if CONF.command.endorser_dn:
                 endorser = {"dn": endorser_dn,
@@ -213,31 +225,34 @@ class CommandImageListAdd(Command):
                 endorser = {}
 
         if identifier is None:
-            self.add_interative(url, token, prefix, enabled, endorser, force)
+            self.add_interative(url, token, prefix, enabled, endorser,
+                                project, force)
         else:
             self.add_non_interactive(identifier, url, token, prefix, enabled,
-                                     endorser, force)
+                                     endorser, project, force)
 
     def add_non_interactive(self, identifier, url, token, prefix, enabled,
-                            endorser, force):
+                            endorser, project, force):
         image_list = atrope.image_list.hepix.HepixImageListSource(
             identifier,
             url,
             enabled=enabled,
             endorser=endorser,
             token=token,
-            prefix=prefix
+            prefix=prefix,
+            project=project
         )
 
         manager = atrope.image_list.manager.YamlImageListManager()
         manager.add_image_list_source(image_list, force=force)
         manager.write_image_list_sources()
 
-    def add_interative(self, url, token, prefix, enabled, endorser, force):
+    def add_interative(self, url, token, prefix, enabled, endorser,
+                       project, force):
         print("Adding image list, enter the following details (Ctr+C to exit)")
         (identifier, url, enabled, endorser, token, prefix,
-         subscribed_images) = self._get_values(url, token, prefix,
-                                               enabled, endorser)
+         subscribed_images, project) = self._get_values(url, token, prefix,
+                                               enabled, endorser, project)
         image_list = atrope.image_list.hepix.HepixImageListSource(
             identifier,
             url,

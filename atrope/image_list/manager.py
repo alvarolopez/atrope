@@ -128,6 +128,7 @@ class YamlImageListManager(BaseImageListManager):
                 enabled=list_meta.pop("enabled", True),
                 subscribed_images=list_meta.pop("images", []),
                 prefix=list_meta.pop("prefix", ""),
+                project=list_meta.pop("project", ""),
                 **list_meta)
             self.lists[name] = l
 
@@ -140,6 +141,7 @@ class YamlImageListManager(BaseImageListManager):
                            "endorser": image_list.endorser,
                            "token": image_list.token,
                            "prefix": image_list.prefix,
+                           "project": image_list.project,
                            "subscribed images": image_list.subscribed_images}
         dump = yaml.dump(lists)
         if not dump:

@@ -95,14 +95,15 @@ class HepixImageListSource(source.BaseImageListSource):
     """An image list."""
 
     def __init__(self, name, url="", enabled=True, subscribed_images=[],
-                 prefix="", **kwargs):
+                 prefix="", project="", **kwargs):
 
         super(HepixImageListSource, self).__init__(
             name,
             url=url,
             enabled=enabled,
             subscribed_images=subscribed_images,
-            prefix=prefix
+            prefix=prefix,
+            project=project
         )
 
         self.token = kwargs.get("token", "")
