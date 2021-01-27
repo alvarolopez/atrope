@@ -13,7 +13,6 @@
 # under the License.
 
 import json
-import pathlib
 
 import glanceclient.client
 from glanceclient import exc as glance_exc
@@ -25,24 +24,16 @@ from oslo_log import log
 from atrope.dispatcher import base
 from atrope import exception
 
-opts = [
-    cfg.StrOpt('mapping_file',
-               default='etc/voms.json',
-               help='File containing the VO <-> tenant mapping for image '
-                    'lists private to VOs'),
-]
-
 CFG_GROUP = "glance"
 CONF = cfg.CONF
-CONF.import_opt("prefix", "atrope.dispatcher.base", group="dispatchers")
-CONF.register_opts(opts, group="glance")
+CONF.import_opt("prefix", "atrope.dispatcher.manager", group="dispatchers")
 
 loading.register_auth_conf_options(CONF, CFG_GROUP)
 loading.register_session_conf_options(CONF, CFG_GROUP)
 
-opts += (loading.get_auth_common_conf_options() +
-         loading.get_session_conf_options() +
-         loading.get_auth_plugin_conf_options('password'))
+opts = (loading.get_auth_common_conf_options() +
+        loading.get_session_conf_options() +
+        loading.get_auth_plugin_conf_options('password'))
 
 LOG = log.getLogger(__name__)
 
@@ -76,19 +67,6 @@ class Dispatcher(base.BaseDispatcher):
         self.client = self._get_glance_client()
         self.ks_client = self._get_ks_client()
 
-        json_file = pathlib.Path(CONF.glance.mapping_file)
-        if json_file.exists():
-            try:
-                self.json_mapping = json.loads(
-                    open(CONF.glance.mapping_file).read())
-            except ValueError:
-                raise exception.GlanceInvalidMappingFIle(
-                    file=CONF.glance.mapping_file,
-                    reason="Bad JSON."
-                )
-        else:
-            self.json_mapping = {}
-
         # Format is not defined in the spec. What is format? Maybe it is the
         # container format? Or is it the image format? Try to do some ugly
         # magic and infer what is this for...
@@ -113,11 +91,6 @@ class Dispatcher(base.BaseDispatcher):
         session = loading.load_session_from_conf_options(CONF, CFG_GROUP,
                                                          auth=auth_plugin)
         return glanceclient.client.Client(2, session=session)
-
-    def _get_vo_tenant_mapping(self, vo):
-        tenant = self.json_mapping.get(vo, {}).get("tenant", None)
-        tenants = self.ks_client.projects.list(name=tenant)
-        return tenants[0].id if tenants else None
 
     def dispatch(self, image_name, image, is_public, **kwargs):
         """Upload an image to the glance service.
@@ -200,33 +173,26 @@ class Dispatcher(base.BaseDispatcher):
             LOG.info("Image '%s' stored in glance as '%s'.",
                      image.identifier, glance_image.id)
 
-        if metadata.get("vo", None) is not None:
-            if project is None:
-                LOG.warning("Using deprecated VO mapping from old VOMS VO "
-                            "mapping, please add a new item 'project' with "
-                            "the project that you want to associate in the "
-                            "image list")
-                project = self._get_vo_tenant_mapping(metadata["vo"])
-            if project is not None:
-                try:
-                    self.client.images.update(glance_image.id,
-                                              visibility="shared")
-                    self.client.image_members.create(glance_image.id,
-                                                     project)
-                except glance_exc.HTTPConflict:
-                    LOG.debug("Image '%s' already associated with VO '%s', "
-                              "tenant '%s'",
-                              image.identifier, metadata["vo"], project)
-                finally:
-                    client = self._get_glance_client(project_id=project)
-                    client.image_members.update(glance_image.id,
-                                                project, 'accepted')
+        if metadata.get("vo", None) and project:
+            try:
+                self.client.images.update(glance_image.id,
+                                          visibility="shared")
+                self.client.image_members.create(glance_image.id,
+                                                 project)
+            except glance_exc.HTTPConflict:
+                LOG.debug("Image '%s' already associated with VO '%s', "
+                          "tenant '%s'",
+                          image.identifier, metadata["vo"], project)
+            finally:
+                client = self._get_glance_client(project_id=project)
+                client.image_members.update(glance_image.id,
+                                            project, 'accepted')
 
-                    LOG.info("Image '%s' associated with VO '%s', project '%s'",
-                             image.identifier, metadata["vo"], project)
-            else:
-                LOG.error("Image '%s' does not have a project associated!" %
-                          image.identifier)
+                LOG.info("Image '%s' associated with VO '%s', project '%s'",
+                         image.identifier, metadata["vo"], project)
+        else:
+            LOG.error("Image '%s' does not have a project associated!" %
+                      image.identifier)
 
     def sync(self, image_list):
         """Sunc image list with dispached images."""
