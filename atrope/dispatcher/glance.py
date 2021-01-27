@@ -143,6 +143,8 @@ class Dispatcher(base.BaseDispatcher):
         if appliance_attrs:
             metadata['APPLIANCE_ATTRIBUTES'] = json.dumps(appliance_attrs)
 
+        project = kwargs.pop("project")
+
         for k, v in kwargs.items():
             if k in metadata:
                 raise exception.MetadataOverwriteNotSupported(key=k)
@@ -194,28 +196,32 @@ class Dispatcher(base.BaseDispatcher):
                      image.identifier, glance_image.id)
 
         if metadata.get("vo", None) is not None:
-            tenant = self._get_vo_tenant_mapping(metadata["vo"])
-            if tenant is not None:
+            if project is None:
+                LOG.warning("Using deprecated VO mapping from old VOMS VO "
+                            "mapping, please add a new item 'project' with "
+                            "the project that you want to associate in the "
+                            "image list")
+                project = self._get_vo_tenant_mapping(metadata["vo"])
+            if project is not None:
                 try:
                     self.client.images.update(glance_image.id,
                                               visibility="shared")
                     self.client.image_members.create(glance_image.id,
-                                                     tenant)
+                                                     project)
                 except glance_exc.HTTPConflict:
                     LOG.debug("Image '%s' already associated with VO '%s', "
                               "tenant '%s'",
-                              image.identifier, metadata["vo"], tenant)
+                              image.identifier, metadata["vo"], project)
                 finally:
-                    client = self._get_glance_client(project_id=tenant)
+                    client = self._get_glance_client(project_id=project)
                     client.image_members.update(glance_image.id,
-                                                tenant, 'accepted')
+                                                project, 'accepted')
 
-                    LOG.info("Image '%s' associated with VO '%s', tenant '%s'",
-                             image.identifier, metadata["vo"], tenant)
+                    LOG.info("Image '%s' associated with VO '%s', project '%s'",
+                             image.identifier, metadata["vo"], project)
             else:
-                LOG.error("Image '%s' is associated with VO '%s' but no "
-                          "tenant mapping could be found!",
-                          image.identifier, metadata["vo"])
+                LOG.error("Image '%s' does not have a project associated!" %
+                          image.identifier)
 
     def sync(self, image_list):
         """Sunc image list with dispached images."""

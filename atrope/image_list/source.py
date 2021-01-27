@@ -26,12 +26,14 @@ class BaseImageListSource(object):
     """An image list."""
 
     def __init__(self, name, url="", enabled=True, subscribed_images=[],
-                 prefix="", **kwargs):
+                 prefix="", project="", **kwargs):
         self.name = name
         self.url = url
         self.enabled = enabled
         self.prefix = prefix
         self.subscribed_images = subscribed_images
+
+        self.project = project
 
     def __repr__(self):
         return "<%s: %s>" % (

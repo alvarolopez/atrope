@@ -31,3 +31,5 @@ class Dispatcher(base.BaseDispatcher):
         In practise I do nothing, since I am the NOOP dispatcher.
         """
         LOG.info("Dispatching image (noop) %s" % image)
+        LOG.info("Dispatching image (noop) args: %s" % args)
+        LOG.info("Dispatching image (noop) kwargs: %s" % kwargs)
