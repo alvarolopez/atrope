@@ -100,7 +100,6 @@ class BaseImageListManager(object):
         """Sync all the cached images with the dispatchers."""
 
         for lst in self.lists.values():
-            print("KKK", lst)
             self.sync_one(lst)
 
     def sync_one(self, lst):
