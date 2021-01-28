@@ -16,9 +16,12 @@
 
 import abc
 
+from oslo_log import log
 import six
 
 from atrope import exception
+
+LOG = log.getLogger(__name__)
 
 
 @six.add_metaclass(abc.ABCMeta)
@@ -54,7 +57,8 @@ class BaseImageListSource(object):
             return []
 
         if self.image_list is None:
-            raise exception.ImageListNotFetched(id=self.name)
+            LOG.error(f"Image list {self.name} has not been fetched!")
+            return []
 
         if not self.subscribed_images:
             return self.image_list.get_images()
