@@ -44,25 +44,27 @@ class DispatcherManager(object):
             cls_ = "%s.%s.Dispatcher" % (DISPATCHER_NAMESPACE, dispatcher)
             self.dispatchers.append(importutils.import_class(cls_)())
 
-    def dispatch_list_and_sync(self, image_list, **kwargs):
-        """Dispatch and sync the images list.
+    def sync(self, image_list, **kwargs):
+        """Sync the images from one list with the dispatchers.
 
         This method will dispatch all the images associated with the image
         list. Afterwards it will remove any image associated to that image list
         that was not set for dispatch (i.e. it will remove old images).
         """
-        self.dispatch_list(image_list, **kwargs)
-        self.sync_list(image_list)
+        self._dispatch_list(image_list, **kwargs)
+        self._sync_list(image_list)
 
-    def sync_list(self, image_list):
-        """Sync a list after dispatch.
+    def _sync_list(self, image_list):
+        """Sync a list after sending all the images to the dispatcher.
 
-        Remove old images that were not set for dispach.
+        This methid will call the sync_list method for each of the dispatchers,
+        in theory these methods should remove old images that were not
+        dispached.
         """
         for dispatcher in self.dispatchers:
             dispatcher.sync(image_list)
 
-    def dispatch_list(self, image_list, **kwargs):
+    def _dispatch_list(self, image_list, **kwargs):
         """Dispatch a list of images to each of the dispatchers.
 
         This command will receive an image list and will dispatch all the
@@ -95,9 +97,9 @@ class DispatcherManager(object):
                           {"global prefix": CONF.dispatchers.prefix,
                            "list prefix": image_list.prefix,
                            "image name": image.title})
-            self.dispatch_image(image_name, image, is_public, **kwargs)
+            self._dispatch_image(image_name, image, is_public, **kwargs)
 
-    def dispatch_image(self, image_name, image, is_public, **kwargs):
+    def _dispatch_image(self, image_name, image, is_public, **kwargs):
         """Dispatch a single image to each of the dispatchers."""
         for dispatcher in self.dispatchers:
             try:

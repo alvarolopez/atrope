@@ -195,7 +195,11 @@ class Dispatcher(base.BaseDispatcher):
                       image.identifier)
 
     def sync(self, image_list):
-        """Sunc image list with dispached images."""
+        """Sunc image list with dispached images.
+
+        This method will remove images that were not set to be dispatched
+        (i.e. that are not included in the list) that are present in Glance.
+        """
         kwargs = {
             "filters": {
                 "tag": ["atrope"],
