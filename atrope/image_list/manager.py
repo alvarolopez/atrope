@@ -51,10 +51,6 @@ class BaseImageListManager(object):
     def _load_sources(self):
         """Load the image sources from disk."""
 
-    @abc.abstractmethod
-    def write_image_list_sources(self):
-        """Write image sources to disk."""
-
     def _fetch_and_verify(self, lst):
         """Fetch and verify an image list.
 
@@ -131,21 +127,3 @@ class YamlImageListManager(BaseImageListManager):
                 project=list_meta.pop("project", ""),
                 **list_meta)
             self.lists[name] = lst
-
-    def write_image_list_sources(self):
-        """Write images into YAML file."""
-        lists = {}
-        for name, image_list in self.lists.items():
-            lists[name] = {"url": image_list.url,
-                           "enabled": image_list.enabled,
-                           "endorser": image_list.endorser,
-                           "token": image_list.token,
-                           "prefix": image_list.prefix,
-                           "project": image_list.project,
-                           "subscribed images": image_list.subscribed_images}
-        dump = yaml.dump(lists)
-        if not dump:
-            raise exception.AtropeException()
-
-        with open(CONF.sources.hepix_sources, "w") as f:
-            f.write(dump)
