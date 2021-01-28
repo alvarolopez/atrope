@@ -231,7 +231,10 @@ class HepixImageListSource(source.BaseImageListSource):
             d["error"] = self.error
         if self.contents is not None and contents:
             d["contents"] = pprint.pformat(self.contents)
-        images = [str(img.identifier) for img in self.get_images()]
+        try:
+            images = [str(img.identifier) for img in self.get_images()]
+        except exception.ImageListNotFetched:
+            images = None
         if images:
             d["images"] = images
         subscribed = self.subscribed_images or images
