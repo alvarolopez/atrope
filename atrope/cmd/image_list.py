@@ -84,20 +84,19 @@ class CommandImageListFetch(BaseImageListCommand):
 
 
 class CommandImageListCache(BaseImageListCommand):
-    def __init__(self, parser, name="sync-cache",
+    def __init__(self, parser, name="cache",
                  cmd_help="Download images from configured image lists."):
         super(CommandImageListCache, self).__init__(parser, name, cmd_help)
 
     def run(self):
-        self.manager.sync_cache()
+        self.manager.cache()
 
 
 class CommandDispatch(BaseImageListCommand):
-    def __init__(self, parser, name="dispatch",
+    def __init__(self, parser, name="sync",
                  cmd_help="Download images from configured image lists "
-                          "and send them to the available dispatchers."):
+                          "and sync them to the available dispatchers."):
         super(CommandDispatch, self).__init__(parser, name, cmd_help)
 
     def run(self):
-        self.manager.sync_cache()
-        self.manager.dispatch(True)
+        self.manager.sync()

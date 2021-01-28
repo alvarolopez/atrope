@@ -42,7 +42,7 @@ class BaseImageListManager(object):
         self._load_sources()
 
     @property
-    def dispatcher(self):
+    def dispatcher_manager(self):
         if self._dispatcher is None:
             self._dispatcher = atrope.dispatcher.manager.DispatcherManager()
         return self._dispatcher
@@ -73,11 +73,8 @@ class BaseImageListManager(object):
 
         self.lists[image_list.name] = image_list
 
-    def fetch_list(self, image_list):
+    def fetch_list(self, lst):
         """Fetch (and verify) an individual list."""
-        lst = self.lists.get(image_list)
-        if lst is None:
-            raise exception.InvalidImageList(reason="not found in config")
         return self._fetch_and_verify(lst)
 
     def fetch_lists(self):
@@ -89,18 +86,28 @@ class BaseImageListManager(object):
 
         return all_lists
 
-    def sync_cache(self):
+    def cache(self):
+        """Fetch, verify and sync all configured lists."""
         self.fetch_lists()
         self.cache_manager.sync(self.lists)
 
-    def dispatch(self, sync):
-        if sync:
-            fn = self.dispatcher.dispatch_list_and_sync
-        else:
-            fn = self.dispatcher.dispatch_list
+    def cache_one(self, lst):
+        """Fetch, verify and sync one lists."""
+        self.fetch_list(lst)
+        self.cache_manager.sync_one(lst)
+
+    def sync(self):
+        """Sync all the cached images with the dispatchers."""
 
         for lst in self.lists.values():
-            fn(lst)
+            print("KKK", lst)
+            self.sync_one(lst)
+
+    def sync_one(self, lst):
+        """Sync one cached image list with the dispatchers."""
+
+        self.cache_one(lst)
+        self.dispatcher_manager.sync(lst)
 
 
 class YamlImageListManager(BaseImageListManager):
