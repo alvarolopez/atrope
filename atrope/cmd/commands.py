@@ -23,6 +23,7 @@ from atrope.cmd import image_list
 from atrope.cmd import version
 
 from oslo_config import cfg
+from oslo_log import log
 
 CONF = cfg.CONF
 
@@ -42,10 +43,13 @@ command_opt = cfg.SubCommandOpt('command',
 
 CONF.register_cli_opt(command_opt)
 
+LOG = log.getLogger(__name__)
+
 
 class CommandManager(object):
     def execute(self):
         try:
+            LOG.info("Atrope session starts >>>>>>>>>>")
             CONF.command.func()
         except exception.AtropeException as e:
             print("ERROR: %s" % e, file=sys.stderr)
@@ -53,3 +57,5 @@ class CommandManager(object):
         except KeyboardInterrupt:
             print("\nExiting...", file=sys.stderr)
             sys.exit(0)
+        finally:
+            LOG.info("Atrope session ends <<<<<<<<<<<<")
